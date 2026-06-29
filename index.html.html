@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Klinika Shëndeti — Rezervo Termin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:#FAF7F2;
+    --ink:#1F2E2B;
+    --ink-soft:#52605C;
+    --sage:#4A6B5E;
+    --sage-light:#DCE6E1;
+    --terracotta:#C4744F;
+    --terracotta-dark:#A85C3A;
+    --card:#FFFFFF;
+    --card-edge:#E8E2D6;
+    --line:#DAD3C5;
+    --staff:#5B5A8C;
+    --staff-light:#E6E4F2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    line-height:1.5;
+  }
+  h1,h2,h3,.serif{ font-family:'Fraunces',serif; }
+  button{ font-family:'Inter',sans-serif; }
+
+  /* ---------- Auth screen ---------- */
+  .auth-wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .auth-card{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:6px;
+    padding:36px 32px;
+    width:100%;
+    max-width:380px;
+  }
+  .auth-mark{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:22px;
+    color:var(--sage);
+    margin-bottom:4px;
+  }
+  .auth-sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:26px;
+  }
+  .role-toggle{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+    margin-bottom:24px;
+  }
+  .role-toggle button{
+    flex:1;
+    background:var(--card);
+    border:none;
+    padding:10px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .role-toggle button.active{
+    background:var(--sage);
+    color:#fff;
+    font-weight:500;
+  }
+  .role-toggle button.active.staff-active{
+    background:var(--staff);
+  }
+  .auth-form label{
+    display:block;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0 0 5px;
+  }
+  .auth-form input{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:4px;
+    padding:10px 12px;
+    font-size:14px;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .auth-form input:focus{
+    outline:none;
+    border-color:var(--sage);
+    box-shadow:0 0 0 3px var(--sage-light);
+  }
+  .auth-submit{
+    width:100%;
+    background:var(--terracotta);
+    color:#fff;
+    border:none;
+    padding:12px;
+    border-radius:4px;
+    font-size:14.5px;
+    font-weight:500;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .auth-submit:hover{ background:var(--terracotta-dark); }
+  .auth-submit.staff-submit{ background:var(--staff); }
+  .auth-submit.staff-submit:hover{ background:#494876; }
+  .auth-switch{
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:18px;
+  }
+  .auth-switch button{
+    background:none; border:none; color:var(--sage);
+    text-decoration:underline; cursor:pointer; font-size:13px; padding:0;
+  }
+  .auth-error{
+    background:#FBEAE3;
+    border:1px solid #E8C3AE;
+    color:#9C4A28;
+    font-size:13px;
+    padding:9px 12px;
+    border-radius:4px;
+    margin-bottom:14px;
+    display:none;
+  }
+  .auth-error.show{ display:block; }
+  .auth-hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    background:var(--sage-light);
+    padding:9px 12px;
+    border-radius:4px;
+    margin-bottom:16px;
+  }
+
+  /* ---------- App shell ---------- */
+  .app{ display:none; }
+  .app.show{ display:block; }
+
+  .topbar{
+    border-bottom:1px solid var(--line);
+    background:var(--paper);
+  }
+  .topbar-inner{
+    max-width:1080px;
+    margin:0 auto;
+    padding:18px 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .brand .mark{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:22px;
+    color:var(--sage);
+  }
+  .brand .tagline{
+    font-size:13px;
+    color:var(--ink-soft);
+    border-left:1px solid var(--line);
+    padding-left:10px;
+  }
+  .session-info{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .session-badge{
+    background:var(--sage-light);
+    color:var(--sage);
+    font-size:11px;
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    padding:4px 10px;
+    border-radius:999px;
+  }
+  .session-badge.staff-badge{
+    background:var(--staff-light);
+    color:var(--staff);
+  }
+  .logout-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    font-size:12.5px;
+    padding:6px 12px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .logout-btn:hover{ border-color:var(--ink-soft); color:var(--ink); }
+
+  /* ---------- Hero / ledger strip ---------- */
+  .ledger-strip{
+    max-width:1080px;
+    margin:0 auto;
+    padding:36px 24px 8px;
+  }
+  .ledger-strip h1{
+    font-size:32px;
+    font-weight:500;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  .ledger-strip p{
+    color:var(--ink-soft);
+    font-size:15px;
+    margin:0 0 22px;
+    max-width:560px;
+  }
+  .filter-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:6px;
+  }
+  .filter-chip{
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink-soft);
+    font-size:13px;
+    padding:7px 14px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .filter-chip:hover{ border-color:var(--sage); color:var(--sage); }
+  .filter-chip.active{
+    background:var(--sage);
+    border-color:var(--sage);
+    color:#fff;
+  }
+
+  /* ---------- Doctor directory ---------- */
+  .directory{
+    max-width:1080px;
+    margin:0 auto;
+    padding:18px 24px 60px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:18px;
+  }
+  .doc-card{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:4px;
+    padding:0;
+    cursor:pointer;
+    position:relative;
+    transition:transform .12s ease, box-shadow .12s ease;
+    overflow:hidden;
+  }
+  .doc-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 18px rgba(31,46,43,0.10);
+  }
+  .doc-card:focus-visible{
+    outline:2px solid var(--sage);
+    outline-offset:2px;
+  }
+  .doc-tab{
+    position:absolute;
+    top:0; right:18px;
+    background:var(--sage);
+    color:#fff;
+    font-size:11px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    padding:5px 12px 4px;
+    border-radius:0 0 6px 6px;
+    font-weight:500;
+  }
+  .doc-card-top{
+    padding:24px 20px 16px;
+    border-bottom:1px dashed var(--line);
+  }
+  .doc-avatar{
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    background:var(--sage-light);
+    color:var(--sage);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:18px;
+    margin-bottom:14px;
+  }
+  .doc-card h3{
+    margin:0 0 3px;
+    font-size:17px;
+    font-weight:500;
+  }
+  .doc-card .specialty{
+    font-size:13px;
+    color:var(--sage);
+    font-weight:500;
+    margin-bottom:0;
+  }
+  .doc-card-bottom{
+    padding:14px 20px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .doc-card-bottom .slots{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    background:#6FA98A;
+    display:inline-block;
+  }
+  .book-hint{
+    color:var(--terracotta);
+    font-weight:500;
+  }
+
+  /* ---------- Overlay / booking panel ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(31,46,43,0.35);
+    display:none;
+    align-items:stretch;
+    justify-content:flex-end;
+    z-index:40;
+  }
+  .overlay.open{ display:flex; }
+  .panel{
+    width:min(420px, 100%);
+    background:var(--paper);
+    height:100%;
+    overflow-y:auto;
+    padding:28px 26px 40px;
+    box-shadow:-12px 0 30px rgba(0,0,0,0.12);
+    animation:slideIn .22s ease;
+  }
+  @keyframes slideIn{ from{transform:translateX(24px); opacity:0;} to{transform:translateX(0); opacity:1;} }
+  .panel-close{
+    background:none; border:none; cursor:pointer;
+    color:var(--ink-soft); font-size:14px;
+    display:flex; align-items:center; gap:6px;
+    padding:0; margin-bottom:22px;
+  }
+  .panel-close:hover{ color:var(--ink); }
+  .panel-doc{
+    display:flex; gap:14px; align-items:center;
+    margin-bottom:6px;
+  }
+  .panel-doc .doc-avatar{ margin-bottom:0; flex-shrink:0; }
+  .panel-doc h2{ margin:0 0 2px; font-size:20px; font-weight:500; }
+  .panel-doc .specialty{ font-size:13px; color:var(--sage); font-weight:500; }
+  .panel-bio{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin:16px 0 26px;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--line);
+  }
+  .section-label{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    margin:0 0 12px;
+    font-weight:500;
+  }
+  .day-block{ margin-bottom:18px; }
+  .day-label{
+    font-size:14px;
+    font-weight:500;
+    margin-bottom:8px;
+    color:var(--ink);
+  }
+  .slot-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:8px;
+  }
+  .slot-btn{
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    font-size:13px;
+    padding:9px 6px;
+    border-radius:4px;
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .slot-btn:hover{ border-color:var(--sage); }
+  .slot-btn.taken{
+    background:#F1EEE7;
+    color:#B9B2A2;
+    text-decoration:line-through;
+    cursor:not-allowed;
+    border-color:var(--line);
+  }
+  .slot-btn.mine{
+    background:var(--sage-light);
+    border-color:var(--sage);
+    color:var(--sage);
+    text-decoration:none;
+    cursor:not-allowed;
+  }
+  .slot-btn.selected{
+    background:var(--terracotta);
+    border-color:var(--terracotta);
+    color:#fff;
+  }
+  .booking-form{
+    margin-top:24px;
+    padding-top:22px;
+    border-top:1px solid var(--line);
+    display:none;
+  }
+  .booking-form.show{ display:block; }
+  .booking-form label{
+    display:block;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0 0 5px;
+  }
+  .booking-form input, .booking-form textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:4px;
+    padding:9px 11px;
+    font-size:14px;
+    color:var(--ink);
+    margin-bottom:14px;
+    resize:vertical;
+  }
+  .booking-form textarea{ min-height:64px; }
+  .booking-form input:focus, .booking-form textarea:focus{
+    outline:none;
+    border-color:var(--sage);
+    box-shadow:0 0 0 3px var(--sage-light);
+  }
+  .selected-slot-preview{
+    background:var(--sage-light);
+    color:var(--sage);
+    font-size:13px;
+    font-weight:500;
+    padding:9px 12px;
+    border-radius:4px;
+    margin-bottom:16px;
+  }
+  .confirm-btn{
+    width:100%;
+    background:var(--terracotta);
+    color:#fff;
+    border:none;
+    padding:13px;
+    border-radius:4px;
+    font-size:14.5px;
+    font-weight:500;
+    cursor:pointer;
+    transition:background .12s ease;
+  }
+  .confirm-btn:hover{ background:var(--terracotta-dark); }
+  .confirm-btn:disabled{ background:#CBC4B4; cursor:not-allowed; }
+
+  .success-note{
+    background:#EAF1EC;
+    border:1px solid #BFD7C8;
+    color:#2F5443;
+    font-size:13.5px;
+    padding:12px 14px;
+    border-radius:4px;
+    margin-top:14px;
+    display:none;
+  }
+  .success-note.show{ display:block; }
+
+  .panel-appts{ margin-top:30px; }
+  .appt-row{
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:10px 12px;
+    margin-bottom:8px;
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+  }
+  .appt-row .who{ font-weight:500; }
+  .appt-row .when{ color:var(--ink-soft); }
+  .appt-cancel{
+    background:none; border:none; color:#A85C3A;
+    font-size:12px; cursor:pointer; text-decoration:underline;
+    padding:0; flex-shrink:0;
+  }
+  .empty-note{ font-size:13px; color:var(--ink-soft); }
+
+  /* ---------- Staff dashboard ---------- */
+  .staff-dash{
+    max-width:1080px;
+    margin:0 auto;
+    padding:30px 24px 60px;
+  }
+  .staff-summary{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
+    gap:12px;
+    margin-bottom:30px;
+  }
+  .stat-card{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:6px;
+    padding:16px 18px;
+  }
+  .stat-card .num{
+    font-family:'Fraunces',serif;
+    font-size:26px;
+    color:var(--staff);
+    font-weight:500;
+  }
+  .stat-card .label{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .staff-table-wrap{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  table.staff-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+  table.staff-table th{
+    text-align:left;
+    background:var(--staff-light);
+    color:var(--staff);
+    font-weight:500;
+    padding:10px 14px;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  table.staff-table td{
+    padding:11px 14px;
+    border-top:1px solid var(--line);
+    vertical-align:top;
+  }
+  table.staff-table tr:hover td{ background:#FBFAF7; }
+  .staff-cancel{
+    background:none; border:none; color:#A85C3A;
+    font-size:12.5px; cursor:pointer; text-decoration:underline;
+    padding:0;
+  }
+  .staff-empty{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+
+  /* ---------- Hero with illustration ---------- */
+  .hero{
+    max-width:1080px;
+    margin:0 auto;
+    padding:40px 24px 10px;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:40px;
+    align-items:center;
+  }
+  .hero-text h1{
+    font-size:38px;
+    font-weight:500;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+    line-height:1.15;
+  }
+  .hero-text p{
+    color:var(--ink-soft);
+    font-size:15.5px;
+    margin:0 0 22px;
+    max-width:480px;
+  }
+  .hero-stats{
+    display:flex;
+    gap:28px;
+    margin-top:8px;
+  }
+  .hero-stat .num{
+    font-family:'Fraunces',serif;
+    font-size:24px;
+    color:var(--sage);
+    font-weight:500;
+  }
+  .hero-stat .label{
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .hero-art{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .hero-art svg{ width:100%; max-width:340px; height:auto; }
+
+  /* ---------- Services strip ---------- */
+  .services{
+    max-width:1080px;
+    margin:10px auto 0;
+    padding:30px 24px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:16px;
+  }
+  .service-card{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:6px;
+    padding:18px 18px 20px;
+  }
+  .service-icon{
+    width:38px; height:38px;
+    border-radius:8px;
+    background:var(--sage-light);
+    color:var(--sage);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:12px;
+  }
+  .service-card h4{
+    margin:0 0 6px;
+    font-size:15px;
+    font-weight:500;
+  }
+  .service-card p{
+    margin:0;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- Doctor portrait illustration ---------- */
+  .doc-portrait{
+    width:100%;
+    height:120px;
+    border-radius:4px 4px 0 0;
+    overflow:hidden;
+    position:relative;
+  }
+  .doc-portrait svg{ width:100%; height:100%; display:block; }
+
+  /* ---------- Footer ---------- */
+  .site-footer{
+    border-top:1px solid var(--line);
+    margin-top:20px;
+  }
+  .footer-inner{
+    max-width:1080px;
+    margin:0 auto;
+    padding:34px 24px;
+    display:grid;
+    grid-template-columns:1.3fr 1fr 1fr;
+    gap:28px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .footer-inner h5{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:15px;
+    color:var(--ink);
+    margin:0 0 10px;
+  }
+  .footer-inner p{ margin:0 0 6px; }
+  .footer-bottom{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    padding:14px 0 26px;
+  }
+
+  /* ---------- Settings / data modal ---------- */
+  .settings-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:4px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .settings-btn:hover{ border-color:var(--staff); color:var(--staff); }
+  .settings-overlay{
+    position:fixed; inset:0;
+    background:rgba(31,46,43,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:60;
+    padding:24px;
+  }
+  .settings-overlay.open{ display:flex; }
+  .settings-modal{
+    background:var(--paper);
+    border-radius:8px;
+    width:100%;
+    max-width:920px;
+    max-height:88vh;
+    overflow-y:auto;
+    padding:0;
+    box-shadow:0 20px 50px rgba(0,0,0,0.25);
+  }
+  .settings-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 26px;
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    background:var(--paper);
+    z-index:2;
+  }
+  .settings-head h2{
+    margin:0;
+    font-size:20px;
+    font-weight:500;
+  }
+  .settings-close{
+    background:none; border:none; cursor:pointer;
+    color:var(--ink-soft); font-size:22px; line-height:1;
+    padding:0 4px;
+  }
+  .settings-close:hover{ color:var(--ink); }
+  .settings-body{ padding:24px 26px 34px; }
+  .settings-tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+  .settings-tab{
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink-soft);
+    font-size:13px;
+    padding:7px 14px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  .settings-tab.active{
+    background:var(--staff);
+    border-color:var(--staff);
+    color:#fff;
+  }
+  .settings-export{
+    display:flex;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .export-btn{
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-size:13px;
+    padding:8px 14px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .export-btn:hover{ border-color:var(--staff); color:var(--staff); }
+  .raw-json{
+    background:#1F2E2B;
+    color:#D9E5DF;
+    font-family:'Courier New',monospace;
+    font-size:12px;
+    padding:16px;
+    border-radius:6px;
+    overflow-x:auto;
+    white-space:pre;
+    max-height:420px;
+    overflow-y:auto;
+  }
+  .doctor-data-card{
+    border:1px solid var(--line);
+    border-radius:6px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .doctor-data-head{
+    background:var(--sage-light);
+    padding:10px 16px;
+    font-weight:500;
+    font-size:14px;
+    color:var(--sage);
+    display:flex;
+    justify-content:space-between;
+  }
+  .patients-list-wrap table.staff-table{ font-size:13px; }
+
+  @media (max-width: 840px){
+    .hero{ grid-template-columns:1fr; }
+    .hero-art{ order:-1; max-width:240px; margin:0 auto; }
+    .footer-inner{ grid-template-columns:1fr; gap:20px; }
+  }
+  @media (max-width: 600px){
+    .slot-grid{ grid-template-columns:repeat(2, 1fr); }
+    .panel{ width:100%; }
+    table.staff-table{ font-size:12.5px; }
+    table.staff-table th, table.staff-table td{ padding:8px 8px; }
+    .settings-modal{ max-height:94vh; }
+  }
+  /* ---------- Staff dashboard (admin look) ---------- */
+  .admin-topstrip{
+    background:var(--staff);
+    color:#fff;
+  }
+  .admin-topstrip-inner{
+    max-width:1080px;
+    margin:0 auto;
+    padding:34px 24px 30px;
+  }
+  .admin-topstrip-inner h1{
+    font-size:28px;
+    font-weight:500;
+    margin:0 0 6px;
+  }
+  .admin-topstrip-inner p{
+    font-size:14px;
+    opacity:0.85;
+    margin:0;
+  }
+  .admin-section{
+    margin-top:30px;
+  }
+  .admin-section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .admin-section-head h3{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:18px;
+    margin:0;
+  }
+  .admin-add-btn{
+    background:var(--staff);
+    color:#fff;
+    border:none;
+    font-size:13px;
+    padding:8px 16px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .admin-add-btn:hover{ background:#494876; }
+  .doctor-manage-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
+    gap:14px;
+  }
+  .doctor-manage-card{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:6px;
+    padding:16px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .doctor-manage-card .dm-avatar{
+    width:40px; height:40px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:14px;
+    color:#fff;
+    flex-shrink:0;
+  }
+  .doctor-manage-card .dm-info{ flex:1; min-width:0; }
+  .doctor-manage-card h4{
+    margin:0 0 2px;
+    font-size:14.5px;
+    font-weight:500;
+  }
+  .doctor-manage-card .dm-spec{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .dm-remove{
+    background:none;
+    border:1px solid var(--line);
+    color:#A85C3A;
+    font-size:12px;
+    padding:5px 10px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .dm-remove:hover{ border-color:#A85C3A; background:#FBEAE3; }
+
+  /* Add-doctor modal (reuses settings-overlay pattern) */
+  .add-doc-form label{
+    display:block;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0 0 5px;
+  }
+  .add-doc-form input, .add-doc-form textarea, .add-doc-form select{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:4px;
+    padding:9px 11px;
+    font-size:14px;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .add-doc-form textarea{ min-height:60px; resize:vertical; }
+  .add-doc-submit{
+    background:var(--staff);
+    color:#fff;
+    border:none;
+    padding:11px 18px;
+    border-radius:4px;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .add-doc-submit:hover{ background:#494876; }
+
+  /* ---------- Logins list (settings tab) ---------- */
+  .login-row{
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:10px 14px;
+    margin-bottom:8px;
+    font-size:13.5px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .login-row .lr-name{ font-weight:500; }
+  .login-row .lr-time{ color:var(--ink-soft); font-size:12px; }
+  .login-role-pill{
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:999px;
+    background:var(--sage-light);
+    color:var(--sage);
+    font-weight:500;
+  }
+  .login-role-pill.staff-pill{
+    background:var(--staff-light);
+    color:var(--staff);
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="auth-wrap" id="authWrap">
+  <div class="auth-card">
+    <div class="auth-mark">Klinika Shëndeti</div>
+    <div class="auth-sub" id="authSub">Hyr për të rezervuar një termin</div>
+
+    <div class="role-toggle">
+      <button id="toPatientTab" class="active">Pacient</button>
+      <button id="toStaffTab">Personeli</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+
+    <div id="staffHint" class="auth-hint" style="display:none;">
+      Llogaritë e personelit krijohen nga administrata. Përdor kredencialet që të janë dhënë.
+    </div>
+
+    <form class="auth-form" id="authForm">
+      <label for="authName">Emri dhe mbiemri</label>
+      <input type="text" id="authName" placeholder="p.sh. Arta Krasniqi" autocomplete="username" />
+      <label for="authPass">Fjalëkalimi</label>
+      <input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password" />
+      <button type="submit" class="auth-submit" id="authSubmitBtn">Hyr</button>
+    </form>
+
+    <div class="auth-switch" id="authSwitch">
+      Nuk ke llogari? <button id="toSignup">Krijo një llogari</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div class="app" id="app">
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="mark">Klinika Shëndeti</span>
+        <span class="tagline">Rezervo termin online</span>
+      </div>
+      <div class="session-info">
+        <span id="sessionName"></span>
+        <span class="session-badge" id="sessionBadge"></span>
+        <button class="settings-btn" id="settingsBtn" style="display:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Të dhënat
+        </button>
+        <button class="logout-btn" id="logoutBtn">Dil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATIENT VIEW -->
+  <div id="patientView">
+    <div class="hero">
+      <div class="hero-text">
+        <h1>Kujdesi shëndetësor, <br/>thjeshtë dhe pranë teje</h1>
+        <p>Zgjedh mjekun, shiko terminet e lira dhe rezervo në më pak se një minutë. Çdo rezervim ruhet automatikisht dhe e gjen kur të duash në llogarinë tënde.</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="num">6</div><div class="label">Mjekë specialistë</div></div>
+          <div class="hero-stat"><div class="num">6</div><div class="label">Ditë në javë</div></div>
+          <div class="hero-stat"><div class="num">24/7</div><div class="label">Rezervim online</div></div>
+        </div>
+      </div>
+      <div class="hero-art">
+        <svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="160" cy="140" r="120" fill="#DCE6E1"/>
+          <rect x="95" y="95" width="130" height="100" rx="10" fill="#FFFFFF" stroke="#C4744F" stroke-width="3"/>
+          <line x1="160" y1="118" x2="160" y2="172" stroke="#C4744F" stroke-width="8" stroke-linecap="round"/>
+          <line x1="133" y1="145" x2="187" y2="145" stroke="#C4744F" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="95" cy="95" r="9" fill="#4A6B5E"/>
+          <circle cx="225" cy="95" r="9" fill="#4A6B5E"/>
+          <circle cx="95" cy="195" r="9" fill="#4A6B5E"/>
+          <circle cx="225" cy="195" r="9" fill="#4A6B5E"/>
+          <path d="M40 220 Q160 250 280 220" stroke="#4A6B5E" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="services">
+      <div class="service-card">
+        <div class="service-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div>
+        <h4>Rezervim i shpejtë</h4>
+        <p>Zgjedh ditën dhe orën që të përshtatet, pa pritje në telefon.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <h4>Llogaria jote</h4>
+        <p>Shiko historikun e termineve dhe anulo kur është nevoja.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+        <h4>Mjekë specialistë</h4>
+        <p>Kardiologji, pediatri, dermatologji dhe më shumë, në një vend.</p>
+      </div>
+    </div>
+
+    <div class="ledger-strip">
+      <h2 style="font-size:24px; font-weight:500; margin:0 0 8px;">Zgjedh mjekun dhe rezervo</h2>
+      <p>Kliko mbi profilin e mjekut për të parë terminet e lira dhe për të caktuar takimin tënd.</p>
+      <div class="filter-row" id="filterRow"></div>
+    </div>
+    <div class="directory" id="directory"></div>
+  </div>
+
+  <!-- STAFF VIEW -->
+  <div id="staffView" style="display:none;">
+    <div class="admin-topstrip">
+      <div class="admin-topstrip-inner">
+        <h1>Paneli i personelit</h1>
+        <p>Menaxho mjekët dhe shiko të gjitha rezervimet e pacientëve.</p>
+      </div>
+    </div>
+    <div class="staff-dash">
+      <div class="staff-summary" id="staffSummary"></div>
+
+      <div class="admin-section">
+        <div class="admin-section-head">
+          <h3>Mjekët</h3>
+          <button class="admin-add-btn" id="addDoctorBtn">+ Shto mjek</button>
+        </div>
+        <div class="doctor-manage-grid" id="doctorManageGrid"></div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-section-head">
+          <h3>Të gjitha terminet</h3>
+        </div>
+        <div class="staff-table-wrap" id="staffTableWrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h5>Klinika Shëndeti</h5>
+        <p>Një vend i vetëm për të gjeturit mjekun e duhur dhe rezervuar terminin tënd online, pa pritje dhe pa telefonata.</p>
+      </div>
+      <div>
+        <h5>Kontakt</h5>
+        <p>Rruga e Shëndetit, Prishtinë</p>
+        <p>+383 38 000 000</p>
+        <p>info@klinikashendeti.example</p>
+      </div>
+      <div>
+        <h5>Orari</h5>
+        <p>E hënë – E premte: 08:00–18:00</p>
+        <p>E shtunë: 09:00–14:00</p>
+        <p>E diel: mbyllur</p>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Klinika Shëndeti</div>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel" id="panel"></div>
+</div>
+
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-modal">
+    <div class="settings-head">
+      <h2>Të dhënat e klinikës</h2>
+      <button class="settings-close" id="settingsCloseBtn">&times;</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="overview">Përmbledhje</button>
+        <button class="settings-tab" data-tab="appointments">Të gjitha terminet</button>
+        <button class="settings-tab" data-tab="patients">Pacientët e regjistruar</button>
+        <button class="settings-tab" data-tab="logins">Kush ka bërë login</button>
+        <button class="settings-tab" data-tab="raw">Të dhëna të papërpunuara (JSON)</button>
+      </div>
+      <div id="settingsContent"></div>
+    </div>
+  </div>
+</div>
+
+<div class="settings-overlay" id="addDoctorOverlay">
+  <div class="settings-modal" style="max-width:480px;">
+    <div class="settings-head">
+      <h2>Shto mjek të ri</h2>
+      <button class="settings-close" id="addDoctorCloseBtn">&times;</button>
+    </div>
+    <div class="settings-body">
+      <form class="add-doc-form" id="addDoctorForm">
+        <label for="newDocName">Emri (me "Dr." para)</label>
+        <input type="text" id="newDocName" placeholder="p.sh. Dr. Mira Sylaj" required />
+        <label for="newDocSpecialty">Specialiteti</label>
+        <input type="text" id="newDocSpecialty" placeholder="p.sh. Oftalmologji" required />
+        <label for="newDocBio">Përshkrim i shkurtër</label>
+        <textarea id="newDocBio" placeholder="Përshkrim i shkurtër i mjekut"></textarea>
+        <button type="submit" class="add-doc-submit">Shto mjekun</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB7TVfP_v2NkT384cj3xWSZkH5N-ThZ84w",
+  authDomain: "klinika-shendeti.firebaseapp.com",
+  projectId: "klinika-shendeti",
+  storageBucket: "klinika-shendeti.firebasestorage.app",
+  messagingSenderId: "733142637349",
+  appId: "1:733142637349:web:0b5c3971ce2be9d07798cc"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const firestore = getFirestore(fbApp);
+const COLLECTION_NAME = "klinika_data";
+
+/* ---------------------------------------------------------------
+   db adapter: mimics the previous window.storage.get/set/delete API
+   so the rest of the app logic doesn't need to change.
+   Each "key" becomes a document inside one Firestore collection.
+--------------------------------------------------------------- */
+var db = {
+  async get(key){
+    var snap = await getDoc(doc(firestore, COLLECTION_NAME, key));
+    if(!snap.exists()) throw new Error('Kyçi nuk ekziston: ' + key);
+    var data = snap.data();
+    return { key: key, value: data.value, shared: true };
+  },
+  async set(key, value){
+    await setDoc(doc(firestore, COLLECTION_NAME, key), { value: value });
+    return { key: key, value: value, shared: true };
+  },
+  async delete(key){
+    await deleteDoc(doc(firestore, COLLECTION_NAME, key));
+    return { key: key, deleted: true, shared: true };
+  }
+};
+
+(function(){
+
+  var DEFAULT_DOCTORS = [
+    { id:'d1', name:'Dr. Arben Krasniqi', specialty:'Kardiologji', initials:'AK', color:'#4A6B5E',
+      bio:'Specialist i sëmundjeve të zemrës me 14 vjet përvojë klinike.' },
+    { id:'d2', name:'Dr. Lirie Hoxha', specialty:'Pediatri', initials:'LH', color:'#C4744F',
+      bio:'Kujdes shëndetësor për fëmijë, nga lindja deri në adoleshencë.' },
+    { id:'d3', name:'Dr. Besnik Gashi', specialty:'Dermatologji', initials:'BG', color:'#5B5A8C',
+      bio:'Trajtim i lëkurës, flokëve dhe thonjve, përvojë në dermatologji estetike.' },
+    { id:'d4', name:'Dr. Fitore Berisha', specialty:'Gjinekologji', initials:'FB', color:'#A8557A',
+      bio:'Kujdes gjinekologjik dhe shëndeti riprodhues për gra të çdo moshe.' },
+    { id:'d5', name:'Dr. Driton Ahmeti', specialty:'Ortopedi', initials:'DA', color:'#3B6D11',
+      bio:'Diagnostikim dhe trajtim i lëndimeve të kockave, nyjeve dhe muskujve.' },
+    { id:'d6', name:'Dr. Vjosa Mustafa', specialty:'Neurologji', initials:'VM', color:'#185FA5',
+      bio:'Specialiste e sistemit nervor, dhimbjeve të kokës dhe çrregullimeve neurologjike.' }
+  ];
+
+  var DOCTORS = DEFAULT_DOCTORS.slice();
+
+  var DOCTOR_COLORS = ['#4A6B5E','#C4744F','#5B5A8C','#A8557A','#3B6D11','#185FA5','#996B1F','#1D9E75'];
+
+  async function loadDoctors(){
+    try{
+      var res = await db.get('doctors');
+      if(res && res.value){
+        var parsed = JSON.parse(res.value);
+        if(Array.isArray(parsed) && parsed.length){
+          DOCTORS = parsed;
+          return DOCTORS;
+        }
+      }
+    }catch(e){}
+    DOCTORS = DEFAULT_DOCTORS.slice();
+    await saveDoctors(DOCTORS);
+    return DOCTORS;
+  }
+
+  async function saveDoctors(list){
+    try{ await db.set('doctors', JSON.stringify(list)); }
+    catch(e){ console.error('Ruajtja e mjekëve dështoi', e); }
+  }
+
+  function makeDoctorId(){
+    return 'd_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  }
+
+  function portraitSVG(doc){
+    return '<svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect width="200" height="120" fill="' + doc.color + '" opacity="0.14"/>' +
+      '<circle cx="100" cy="58" r="46" fill="' + doc.color + '" opacity="0.22"/>' +
+      '<circle cx="100" cy="44" r="20" fill="' + doc.color + '"/>' +
+      '<path d="M58 118c2-24 18-40 42-40s40 16 42 40" fill="' + doc.color + '"/>' +
+      '</svg>';
+  }
+
+  var STAFF_ACCOUNTS = [
+    { name:'Blendi', password:'6767' }
+  ];
+
+  var DAYS = ['Të martën, 1 korrik', 'Të mërkurën, 2 korrik', 'Të enjten, 3 korrik'];
+  var TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30'];
+
+  var session = null;
+  var authMode = 'patient';
+  var authIsSignup = false;
+
+  var state = { selectedDoctor:null, selectedSlot:null };
+  var currentFilter = null;
+
+  function el(tag, cls, html){
+    var e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function showAuthError(msg){
+    var box = document.getElementById('authError');
+    box.textContent = msg;
+    box.classList.add('show');
+  }
+  function clearAuthError(){
+    document.getElementById('authError').classList.remove('show');
+  }
+
+  /* ---------------- Storage helpers ---------------- */
+
+  async function getPatients(){
+    try{
+      var res = await db.get('patients');
+      return res ? JSON.parse(res.value) : [];
+    }catch(e){ return []; }
+  }
+  async function savePatients(list){
+    try{ await db.set('patients', JSON.stringify(list)); }
+    catch(e){ console.error('Ruajtja dështoi', e); }
+  }
+
+  async function loadAppointments(doctorId){
+    try{
+      var res = await db.get('appts:' + doctorId);
+      return res ? JSON.parse(res.value) : [];
+    }catch(e){ return []; }
+  }
+  async function saveAppointments(doctorId, list){
+    try{ await db.set('appts:' + doctorId, JSON.stringify(list)); }
+    catch(e){ console.error('Ruajtja dështoi', e); }
+  }
+
+  async function loadAllAppointments(){
+    var all = [];
+    for(var i=0;i<DOCTORS.length;i++){
+      var d = DOCTORS[i];
+      var list = await loadAppointments(d.id);
+      list.forEach(function(a){ a._doctorId = d.id; a._doctorName = d.name; });
+      all = all.concat(list);
+    }
+    return all;
+  }
+
+  function slotKey(day, time){ return day + '|' + time; }
+
+  /* ---------------- Auth UI ---------------- */
+
+  function setAuthMode(mode){
+    authMode = mode;
+    clearAuthError();
+    var patTab = document.getElementById('toPatientTab');
+    var staffTab = document.getElementById('toStaffTab');
+    var staffHint = document.getElementById('staffHint');
+    var authSwitch = document.getElementById('authSwitch');
+    var submitBtn = document.getElementById('authSubmitBtn');
+    var authSub = document.getElementById('authSub');
+
+    if(mode === 'patient'){
+      patTab.classList.add('active');
+      staffTab.classList.remove('active');
+      staffTab.classList.remove('staff-active');
+      staffHint.style.display = 'none';
+      authSwitch.style.display = 'block';
+      submitBtn.classList.remove('staff-submit');
+      authIsSignup = false;
+      renderAuthSignupState();
+    }else{
+      staffTab.classList.add('active');
+      staffTab.classList.add('staff-active');
+      patTab.classList.remove('active');
+      staffHint.style.display = 'block';
+      authSwitch.style.display = 'none';
+      submitBtn.textContent = 'Hyr si personel';
+      submitBtn.classList.add('staff-submit');
+      authSub.textContent = 'Hyrje për stafin e klinikës';
+    }
+  }
+
+  function renderAuthSignupState(){
+    var submitBtn = document.getElementById('authSubmitBtn');
+    var authSwitch = document.getElementById('authSwitch');
+    var authSub = document.getElementById('authSub');
+    if(authIsSignup){
+      submitBtn.textContent = 'Krijo llogari';
+      authSub.textContent = 'Krijo një llogari të re si pacient';
+      authSwitch.innerHTML = 'Ke tashmë llogari? <button id="toSignup">Hyr</button>';
+    }else{
+      submitBtn.textContent = 'Hyr';
+      authSub.textContent = 'Hyr për të rezervuar një termin';
+      authSwitch.innerHTML = 'Nuk ke llogari? <button id="toSignup">Krijo një llogari</button>';
+    }
+    document.getElementById('toSignup').onclick = function(){
+      authIsSignup = !authIsSignup;
+      clearAuthError();
+      renderAuthSignupState();
+    };
+  }
+
+  async function handleAuthSubmit(e){
+    e.preventDefault();
+    clearAuthError();
+    var name = document.getElementById('authName').value.trim();
+    var pass = document.getElementById('authPass').value;
+
+    if(!name || !pass){
+      showAuthError('Plotëso emrin dhe fjalëkalimin.');
+      return;
+    }
+
+    if(authMode === 'staff'){
+      var staffMatch = STAFF_ACCOUNTS.find(function(s){
+        return s.name.toLowerCase() === name.toLowerCase() && s.password === pass;
+      });
+      if(!staffMatch){
+        showAuthError('Emri ose fjalëkalimi i personelit është i pasaktë.');
+        return;
+      }
+      session = { role:'staff', name:staffMatch.name };
+      await logLogin(session.name, 'staff');
+      enterApp();
+      return;
+    }
+
+    var patients = await getPatients();
+    var existing = patients.find(function(p){ return p.name.toLowerCase() === name.toLowerCase(); });
+
+    if(authIsSignup){
+      if(existing){
+        showAuthError('Ky emër ekziston tashmë. Provo të hysh në vend se të krijosh llogari të re.');
+        return;
+      }
+      patients.push({ name:name, password:pass });
+      await savePatients(patients);
+      session = { role:'patient', name:name };
+      await logLogin(session.name, 'patient');
+      enterApp();
+    }else{
+      if(!existing){
+        showAuthError('Nuk u gjet llogari me këtë emër. Krijo një llogari të re.');
+        return;
+      }
+      if(existing.password !== pass){
+        showAuthError('Fjalëkalimi është i pasaktë.');
+        return;
+      }
+      session = { role:'patient', name:name };
+      await logLogin(session.name, 'patient');
+      enterApp();
+    }
+  }
+
+  async function logLogin(name, role){
+    try{
+      var res = await db.get('login_log');
+      var log = res ? JSON.parse(res.value) : [];
+      log.unshift({ name:name, role:role, at:new Date().toISOString() });
+      if(log.length > 200) log = log.slice(0, 200);
+      await db.set('login_log', JSON.stringify(log));
+    }catch(e){ console.error('Regjistrimi i login-it dështoi', e); }
+  }
+
+  async function getLoginLog(){
+    try{
+      var res = await db.get('login_log');
+      return res ? JSON.parse(res.value) : [];
+    }catch(e){ return []; }
+  }
+
+  /* ---------------- App entry / logout ---------------- */
+
+  async function enterApp(){
+    document.getElementById('authWrap').style.display = 'none';
+    var app = document.getElementById('app');
+    app.classList.add('show');
+
+    await loadDoctors();
+
+    document.getElementById('sessionName').textContent = session.name;
+    var badge = document.getElementById('sessionBadge');
+    if(session.role === 'staff'){
+      badge.textContent = 'Personel';
+      badge.classList.add('staff-badge');
+      document.getElementById('patientView').style.display = 'none';
+      document.getElementById('staffView').style.display = 'block';
+      document.getElementById('settingsBtn').style.display = 'flex';
+      renderStaffDashboard();
+    }else{
+      badge.textContent = 'Pacient';
+      badge.classList.remove('staff-badge');
+      document.getElementById('patientView').style.display = 'block';
+      document.getElementById('staffView').style.display = 'none';
+      document.getElementById('settingsBtn').style.display = 'none';
+      renderFilters();
+      renderDirectory();
+    }
+  }
+
+  function logout(){
+    session = null;
+    state.selectedDoctor = null;
+    state.selectedSlot = null;
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('settingsOverlay').classList.remove('open');
+    document.getElementById('app').classList.remove('show');
+    document.getElementById('authWrap').style.display = 'flex';
+    document.getElementById('authForm').reset();
+    clearAuthError();
+    authIsSignup = false;
+    setAuthMode('patient');
+  }
+
+  /* ---------------- Patient: directory ---------------- */
+
+  function specialties(){
+    var set = {};
+    DOCTORS.forEach(function(d){ set[d.specialty] = true; });
+    return Object.keys(set);
+  }
+
+  function renderFilters(){
+    var row = document.getElementById('filterRow');
+    row.innerHTML = '';
+    var all = el('button','filter-chip active','Të gjithë');
+    all.onclick = function(){ setFilter(null, all); };
+    row.appendChild(all);
+    specialties().forEach(function(s){
+      var chip = el('button','filter-chip', s);
+      chip.onclick = function(){ setFilter(s, chip); };
+      row.appendChild(chip);
+    });
+  }
+
+  function setFilter(spec, btn){
+    currentFilter = spec;
+    document.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.remove('active'); });
+    btn.classList.add('active');
+    renderDirectory();
+  }
+
+  async function renderDirectory(){
+    var dir = document.getElementById('directory');
+    dir.innerHTML = '';
+    var list = currentFilter ? DOCTORS.filter(function(d){ return d.specialty === currentFilter; }) : DOCTORS;
+    for(var i=0;i<list.length;i++){
+      var d = list[i];
+      var appts = await loadAppointments(d.id);
+      var taken = appts.length;
+      var total = DAYS.length * TIMES.length;
+      var free = total - taken;
+
+      var card = el('div','doc-card');
+      card.tabIndex = 0;
+      card.setAttribute('role','button');
+      card.setAttribute('aria-label', 'Rezervo te ' + d.name);
+      card.innerHTML =
+        '<div class="doc-portrait">' + portraitSVG(d) + '</div>' +
+        '<span class="doc-tab">' + d.specialty + '</span>' +
+        '<div class="doc-card-top">' +
+          '<div class="doc-avatar">' + d.initials + '</div>' +
+          '<h3>' + d.name + '</h3>' +
+          '<div class="specialty">' + d.specialty + '</div>' +
+        '</div>' +
+        '<div class="doc-card-bottom">' +
+          '<span class="slots"><span class="dot"></span>' + free + ' termine të lira</span>' +
+          '<span class="book-hint">Rezervo →</span>' +
+        '</div>';
+      card.onclick = function(doc){ return function(){ openPanel(doc); }; }(d);
+      card.onkeydown = function(doc){ return function(e){ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openPanel(doc); } }; }(d);
+      dir.appendChild(card);
+    }
+  }
+
+  /* ---------------- Patient: booking panel ---------------- */
+
+  async function openPanel(doc){
+    state.selectedDoctor = doc;
+    state.selectedSlot = null;
+    var overlay = document.getElementById('overlay');
+    overlay.classList.add('open');
+    await renderPanel();
+    overlay.onclick = function(e){ if(e.target === overlay) closePanel(); };
+  }
+
+  function closePanel(){
+    document.getElementById('overlay').classList.remove('open');
+    state.selectedSlot = null;
+  }
+
+  async function renderPanel(){
+    var doc = state.selectedDoctor;
+    var panel = document.getElementById('panel');
+    var appts = await loadAppointments(doc.id);
+    var takenSet = {};
+    appts.forEach(function(a){ takenSet[a.slotKey] = a; });
+
+    var html = '';
+    html += '<button class="panel-close" id="closeBtn">← Kthehu te lista</button>';
+    html += '<div class="panel-doc">' +
+              '<div class="doc-avatar">' + doc.initials + '</div>' +
+              '<div><h2>' + doc.name + '</h2><div class="specialty">' + doc.specialty + '</div></div>' +
+            '</div>';
+    html += '<p class="panel-bio">' + doc.bio + '</p>';
+    html += '<p class="section-label">Zgjedh terminin</p>';
+
+    DAYS.forEach(function(day){
+      html += '<div class="day-block"><div class="day-label">' + day + '</div><div class="slot-grid">';
+      TIMES.forEach(function(time){
+        var key = slotKey(day, time);
+        var bookedBy = takenSet[key];
+        var isMine = bookedBy && bookedBy.patientName === session.name;
+        var isTaken = !!bookedBy && !isMine;
+        var isSelected = state.selectedSlot === key;
+        var cls = 'slot-btn';
+        if(isTaken) cls += ' taken';
+        if(isMine) cls += ' mine';
+        if(isSelected) cls += ' selected';
+        var disabled = (isTaken || isMine) ? 'disabled' : '';
+        html += '<button class="' + cls + '" data-key="' + key + '" ' + disabled + '>' + time + '</button>';
+      });
+      html += '</div></div>';
+    });
+
+    html += '<div class="booking-form' + (state.selectedSlot ? ' show':'') + '" id="bookingForm">' +
+              '<div class="selected-slot-preview" id="slotPreview"></div>' +
+              '<label for="patReason">Arsyeja e vizitës</label>' +
+              '<textarea id="patReason" placeholder="Përshkruaj shkurt arsyen e vizitës"></textarea>' +
+              '<button class="confirm-btn" id="confirmBtn">Konfirmo terminin</button>' +
+              '<div class="success-note" id="successNote">Termini u rezervua. Konfirmimi është ruajtur.</div>' +
+            '</div>';
+
+    var myAppts = appts.filter(function(a){ return a.patientName === session.name; });
+    html += '<div class="panel-appts"><p class="section-label">Terminet e mia te ' + doc.name + '</p><div id="apptList"></div></div>';
+
+    panel.innerHTML = html;
+
+    document.getElementById('closeBtn').onclick = closePanel;
+
+    panel.querySelectorAll('.slot-btn:not(.taken):not(.mine)').forEach(function(btn){
+      btn.onclick = function(){
+        state.selectedSlot = btn.getAttribute('data-key');
+        renderPanel();
+      };
+    });
+
+    if(state.selectedSlot){
+      var parts = state.selectedSlot.split('|');
+      document.getElementById('slotPreview').textContent = parts[0] + ' në ' + parts[1];
+      document.getElementById('confirmBtn').onclick = function(){ confirmBooking(); };
+    }
+
+    var apptList = document.getElementById('apptList');
+    if(myAppts.length === 0){
+      apptList.innerHTML = '<p class="empty-note">Nuk ke ende termine të rezervuara te ky mjek.</p>';
+    }else{
+      apptList.innerHTML = '';
+      myAppts.sort(function(a,b){ return a.slotKey.localeCompare(b.slotKey); }).forEach(function(a){
+        var parts = a.slotKey.split('|');
+        var row = el('div','appt-row');
+        row.innerHTML = '<span><span class="when">' + parts[0] + ', ' + parts[1] + '</span></span>';
+        var cancelBtn = el('button','appt-cancel','Anulo');
+        cancelBtn.onclick = function(){ cancelAppointment(a.slotKey); };
+        row.appendChild(cancelBtn);
+        apptList.appendChild(row);
+      });
+    }
+  }
+
+  async function confirmBooking(){
+    var reason = document.getElementById('patReason').value.trim();
+    var btn = document.getElementById('confirmBtn');
+    btn.disabled = true;
+    btn.textContent = 'Duke ruajtur…';
+
+    var doc = state.selectedDoctor;
+    var appts = await loadAppointments(doc.id);
+    appts.push({
+      slotKey: state.selectedSlot,
+      patientName: session.name,
+      reason: reason,
+      bookedAt: new Date().toISOString()
+    });
+    await saveAppointments(doc.id, appts);
+
+    document.getElementById('successNote').classList.add('show');
+    btn.textContent = 'Konfirmuar ✓';
+
+    setTimeout(async function(){
+      state.selectedSlot = null;
+      await renderPanel();
+      renderDirectory();
+    }, 900);
+  }
+
+  async function cancelAppointment(key){
+    var doc = state.selectedDoctor;
+    var appts = await loadAppointments(doc.id);
+    appts = appts.filter(function(a){ return !(a.slotKey === key && a.patientName === session.name); });
+    await saveAppointments(doc.id, appts);
+    await renderPanel();
+    renderDirectory();
+  }
+
+  /* ---------------- Staff dashboard ---------------- */
+
+  async function renderStaffDashboard(){
+    await renderDoctorManageGrid();
+
+    var all = await loadAllAppointments();
+    var summary = document.getElementById('staffSummary');
+    var wrap = document.getElementById('staffTableWrap');
+
+    var byDoctor = {};
+    DOCTORS.forEach(function(d){ byDoctor[d.id] = 0; });
+    all.forEach(function(a){ byDoctor[a._doctorId] = (byDoctor[a._doctorId]||0) + 1; });
+
+    var busiest = DOCTORS.slice().sort(function(a,b){ return (byDoctor[b.id]||0) - (byDoctor[a.id]||0); })[0];
+
+    summary.innerHTML =
+      '<div class="stat-card"><div class="num">' + all.length + '</div><div class="label">Termine gjithsej</div></div>' +
+      '<div class="stat-card"><div class="num">' + DOCTORS.length + '</div><div class="label">Mjekë aktivë</div></div>' +
+      '<div class="stat-card"><div class="num">' + (busiest ? (byDoctor[busiest.id]||0) : 0) + '</div><div class="label">' + (busiest ? busiest.name.replace('Dr. ','') : '—') + '</div></div>';
+
+    if(all.length === 0){
+      wrap.innerHTML = '<div class="staff-empty">Nuk ka ende termine të rezervuara.</div>';
+      return;
+    }
+
+    all.sort(function(a,b){ return a.slotKey.localeCompare(b.slotKey); });
+
+    var html = '<table class="staff-table"><thead><tr>' +
+      '<th>Pacienti</th><th>Mjeku</th><th>Termini</th><th>Arsyeja</th><th></th>' +
+      '</tr></thead><tbody>';
+
+    all.forEach(function(a){
+      var parts = a.slotKey.split('|');
+      html += '<tr>' +
+        '<td>' + a.patientName + '</td>' +
+        '<td>' + a._doctorName + '</td>' +
+        '<td>' + parts[0] + '<br><span style="color:var(--ink-soft)">' + parts[1] + '</span></td>' +
+        '<td>' + (a.reason ? a.reason : '<span style="color:var(--ink-soft)">—</span>') + '</td>' +
+        '<td><button class="staff-cancel" data-doctor="' + a._doctorId + '" data-key="' + a.slotKey + '" data-patient="' + a.patientName.replace(/"/g,'&quot;') + '">Anulo</button></td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+
+    wrap.querySelectorAll('.staff-cancel').forEach(function(btn){
+      btn.onclick = async function(){
+        var doctorId = btn.getAttribute('data-doctor');
+        var key = btn.getAttribute('data-key');
+        var patient = btn.getAttribute('data-patient');
+        var list = await loadAppointments(doctorId);
+        list = list.filter(function(a){ return !(a.slotKey === key && a.patientName === patient); });
+        await saveAppointments(doctorId, list);
+        renderStaffDashboard();
+      };
+    });
+  }
+
+  function initialsFromName(name){
+    var cleaned = name.replace(/^Dr\.\s*/i, '').trim();
+    var parts = cleaned.split(/\s+/).filter(Boolean);
+    if(parts.length === 0) return '??';
+    if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  }
+
+  async function renderDoctorManageGrid(){
+    var grid = document.getElementById('doctorManageGrid');
+    if(!grid) return;
+    if(DOCTORS.length === 0){
+      grid.innerHTML = '<p class="empty-note">Asnjë mjek i regjistruar. Shto të parin.</p>';
+      return;
+    }
+    grid.innerHTML = '';
+    DOCTORS.forEach(function(d){
+      var card = el('div','doctor-manage-card');
+      card.innerHTML =
+        '<div class="dm-avatar" style="background:' + d.color + '">' + d.initials + '</div>' +
+        '<div class="dm-info">' +
+          '<h4>' + escapeHtml(d.name) + '</h4>' +
+          '<div class="dm-spec">' + escapeHtml(d.specialty) + '</div>' +
+          '<button class="dm-remove" data-id="' + d.id + '">Hiq mjekun</button>' +
+        '</div>';
+      grid.appendChild(card);
+    });
+    grid.querySelectorAll('.dm-remove').forEach(function(btn){
+      btn.onclick = async function(){
+        var id = btn.getAttribute('data-id');
+        var doc = DOCTORS.find(function(d){ return d.id === id; });
+        if(!doc) return;
+        var ok = confirm('A je i sigurt që do ta heqësh ' + doc.name + '? Terminet e tij/saj do të fshihen.');
+        if(!ok) return;
+        DOCTORS = DOCTORS.filter(function(d){ return d.id !== id; });
+        await saveDoctors(DOCTORS);
+        try{ await db.delete('appts:' + id); }catch(e){}
+        renderStaffDashboard();
+      };
+    });
+  }
+
+  function openAddDoctor(){
+    document.getElementById('addDoctorOverlay').classList.add('open');
+  }
+  function closeAddDoctor(){
+    document.getElementById('addDoctorOverlay').classList.remove('open');
+    document.getElementById('addDoctorForm').reset();
+  }
+
+  async function handleAddDoctor(e){
+    e.preventDefault();
+    var name = document.getElementById('newDocName').value.trim();
+    var specialty = document.getElementById('newDocSpecialty').value.trim();
+    var bio = document.getElementById('newDocBio').value.trim();
+    if(!name || !specialty) return;
+
+    var color = DOCTOR_COLORS[DOCTORS.length % DOCTOR_COLORS.length];
+    var newDoc = {
+      id: makeDoctorId(),
+      name: name,
+      specialty: specialty,
+      initials: initialsFromName(name),
+      color: color,
+      bio: bio || 'Mjek/e e klinikës.'
+    };
+    DOCTORS.push(newDoc);
+    await saveDoctors(DOCTORS);
+    closeAddDoctor();
+    renderStaffDashboard();
+  }
+
+  /* ---------------- Settings / data modal ---------------- */
+
+  var settingsTab = 'overview';
+
+  async function openSettings(){
+    document.getElementById('settingsOverlay').classList.add('open');
+    await renderSettingsContent();
+  }
+  function closeSettings(){
+    document.getElementById('settingsOverlay').classList.remove('open');
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  async function renderSettingsContent(){
+    var box = document.getElementById('settingsContent');
+    var all = await loadAllAppointments();
+    var patients = await getPatients();
+
+    if(settingsTab === 'overview'){
+      var byDoctor = {};
+      DOCTORS.forEach(function(d){ byDoctor[d.id] = 0; });
+      all.forEach(function(a){ byDoctor[a._doctorId] = (byDoctor[a._doctorId]||0) + 1; });
+
+      var html = '<div class="staff-summary" style="margin-bottom:24px;">' +
+        '<div class="stat-card"><div class="num">' + all.length + '</div><div class="label">Termine gjithsej</div></div>' +
+        '<div class="stat-card"><div class="num">' + patients.length + '</div><div class="label">Pacientë të regjistruar</div></div>' +
+        '<div class="stat-card"><div class="num">' + DOCTORS.length + '</div><div class="label">Mjekë aktivë</div></div>' +
+        '</div>';
+
+      html += '<p class="section-label">Terminet sipas mjekut</p>';
+      DOCTORS.forEach(function(d){
+        html += '<div class="doctor-data-card"><div class="doctor-data-head"><span>' + d.name + '</span><span>' + (byDoctor[d.id]||0) + ' termine</span></div></div>';
+      });
+      box.innerHTML = html;
+
+    }else if(settingsTab === 'appointments'){
+      var html = '<div class="settings-export"><button class="export-btn" id="exportApptsBtn">Shkarko si JSON</button><button class="export-btn" id="exportApptsCsvBtn">Shkarko si CSV</button></div>';
+      if(all.length === 0){
+        html += '<div class="staff-empty">Nuk ka ende termine të rezervuara.</div>';
+      }else{
+        all.sort(function(a,b){ return a.slotKey.localeCompare(b.slotKey); });
+        html += '<table class="staff-table"><thead><tr><th>Pacienti</th><th>Mjeku</th><th>Termini</th><th>Arsyeja</th><th>Rezervuar më</th></tr></thead><tbody>';
+        all.forEach(function(a){
+          var parts = a.slotKey.split('|');
+          var bookedDate = a.bookedAt ? new Date(a.bookedAt).toLocaleString('sq-AL') : '—';
+          html += '<tr><td>' + escapeHtml(a.patientName) + '</td><td>' + escapeHtml(a._doctorName) + '</td>' +
+            '<td>' + parts[0] + '<br><span style="color:var(--ink-soft)">' + parts[1] + '</span></td>' +
+            '<td>' + (a.reason ? escapeHtml(a.reason) : '—') + '</td>' +
+            '<td style="font-size:12px; color:var(--ink-soft);">' + bookedDate + '</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+      box.innerHTML = html;
+      var jsonBtn = document.getElementById('exportApptsBtn');
+      if(jsonBtn) jsonBtn.onclick = function(){ downloadFile('terminet.json', JSON.stringify(all, null, 2), 'application/json'); };
+      var csvBtn = document.getElementById('exportApptsCsvBtn');
+      if(csvBtn) csvBtn.onclick = function(){ downloadFile('terminet.csv', apptsToCsv(all), 'text/csv'); };
+
+    }else if(settingsTab === 'patients'){
+      var html = '<div class="settings-export"><button class="export-btn" id="exportPatientsBtn">Shkarko si JSON</button></div>';
+      if(patients.length === 0){
+        html += '<div class="staff-empty">Asnjë pacient i regjistruar ende.</div>';
+      }else{
+        html += '<div class="patients-list-wrap"><table class="staff-table"><thead><tr><th>Emri</th><th>Numri i termineve</th></tr></thead><tbody>';
+        patients.forEach(function(p){
+          var count = all.filter(function(a){ return a.patientName === p.name; }).length;
+          html += '<tr><td>' + escapeHtml(p.name) + '</td><td>' + count + '</td></tr>';
+        });
+        html += '</tbody></table></div>';
+      }
+      box.innerHTML = html;
+      var pBtn = document.getElementById('exportPatientsBtn');
+      if(pBtn) pBtn.onclick = function(){
+        var safe = patients.map(function(p){ return { name:p.name }; });
+        downloadFile('pacientet.json', JSON.stringify(safe, null, 2), 'application/json');
+      };
+
+    }else if(settingsTab === 'logins'){
+      var log = await getLoginLog();
+      var html = '<div class="settings-export"><button class="export-btn" id="exportLoginsBtn">Shkarko si JSON</button></div>';
+      if(log.length === 0){
+        html += '<div class="staff-empty">Nuk ka ende login-e të regjistruara.</div>';
+      }else{
+        log.forEach(function(entry){
+          var when = entry.at ? new Date(entry.at).toLocaleString('sq-AL') : '—';
+          var pillClass = entry.role === 'staff' ? 'login-role-pill staff-pill' : 'login-role-pill';
+          var pillText = entry.role === 'staff' ? 'Personel' : 'Pacient';
+          html += '<div class="login-row">' +
+            '<span><span class="lr-name">' + escapeHtml(entry.name) + '</span> <span class="' + pillClass + '">' + pillText + '</span></span>' +
+            '<span class="lr-time">' + when + '</span>' +
+            '</div>';
+        });
+      }
+      box.innerHTML = html;
+      var lBtn = document.getElementById('exportLoginsBtn');
+      if(lBtn) lBtn.onclick = function(){ downloadFile('logins.json', JSON.stringify(log, null, 2), 'application/json'); };
+
+    }else if(settingsTab === 'raw'){
+      var dump = { patients: patients.map(function(p){ return {name:p.name}; }), appointments: all };
+      box.innerHTML = '<p style="font-size:13px; color:var(--ink-soft); margin-bottom:12px;">Pamje e plotë e të dhënave të ruajtura (fjalëkalimet janë fshehur).</p>' +
+        '<div class="raw-json">' + escapeHtml(JSON.stringify(dump, null, 2)) + '</div>';
+    }
+  }
+
+  function apptsToCsv(all){
+    var rows = [['Pacienti','Mjeku','Dita','Ora','Arsyeja','Rezervuar me']];
+    all.forEach(function(a){
+      var parts = a.slotKey.split('|');
+      rows.push([a.patientName, a._doctorName, parts[0], parts[1], a.reason||'', a.bookedAt||'']);
+    });
+    return rows.map(function(r){
+      return r.map(function(cell){
+        var s = String(cell).replace(/"/g,'""');
+        return '"' + s + '"';
+      }).join(',');
+    }).join('\n');
+  }
+
+  function downloadFile(filename, content, mime){
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /* ---------------- Init ---------------- */
+
+  document.getElementById('toPatientTab').onclick = function(){ setAuthMode('patient'); };
+  document.getElementById('toStaffTab').onclick = function(){ setAuthMode('staff'); };
+  document.getElementById('authForm').onsubmit = handleAuthSubmit;
+  document.getElementById('logoutBtn').onclick = logout;
+
+  document.getElementById('settingsBtn').onclick = openSettings;
+  document.getElementById('settingsCloseBtn').onclick = closeSettings;
+  document.getElementById('settingsOverlay').onclick = function(e){
+    if(e.target.id === 'settingsOverlay') closeSettings();
+  };
+  document.querySelectorAll('.settings-tab').forEach(function(tab){
+    tab.onclick = function(){
+      document.querySelectorAll('.settings-tab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+      settingsTab = tab.getAttribute('data-tab');
+      renderSettingsContent();
+    };
+  });
+
+  document.getElementById('addDoctorBtn').onclick = openAddDoctor;
+  document.getElementById('addDoctorCloseBtn').onclick = closeAddDoctor;
+  document.getElementById('addDoctorForm').onsubmit = handleAddDoctor;
+  document.getElementById('addDoctorOverlay').onclick = function(e){
+    if(e.target.id === 'addDoctorOverlay') closeAddDoctor();
+  };
+
+  setAuthMode('patient');
+
+})();
+</script>
+
+</body>
+</html>
