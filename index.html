@@ -684,6 +684,7 @@
     border-radius:4px 4px 0 0;
     overflow:hidden;
     position:relative;
+    background:#e8e2d6;
   }
   .doc-portrait svg{ width:100%; height:100%; display:block; }
 
@@ -996,6 +997,160 @@
     background:var(--staff-light);
     color:var(--staff);
   }
+  /* ---------- Analyses section ---------- */
+  .analyses-wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:10px 24px 50px;
+  }
+  .analyses-wrap h2{
+    font-size:24px;
+    font-weight:500;
+    margin:0 0 6px;
+  }
+  .analyses-wrap > p{
+    color:var(--ink-soft);
+    font-size:14.5px;
+    margin:0 0 22px;
+  }
+  .analysis-card{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:8px;
+    padding:18px 20px;
+    margin-bottom:12px;
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+  }
+  .analysis-icon{
+    width:40px; height:40px;
+    border-radius:8px;
+    background:var(--sage-light);
+    color:var(--sage);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .analysis-icon.alert{ background:#FEF0E7; color:var(--terracotta); }
+  .analysis-info{ flex:1; min-width:0; }
+  .analysis-info h4{
+    margin:0 0 3px;
+    font-size:15px;
+    font-weight:500;
+  }
+  .analysis-info .a-meta{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .analysis-info .a-notes{
+    font-size:13.5px;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:8px 10px;
+    margin-top:6px;
+    white-space:pre-wrap;
+  }
+  .analysis-date{
+    font-size:12px;
+    color:var(--ink-soft);
+    flex-shrink:0;
+    text-align:right;
+  }
+  .no-analyses{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+    border:1px dashed var(--line);
+    border-radius:8px;
+  }
+
+  /* Staff: add analysis form */
+  .add-analysis-wrap{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:8px;
+    padding:20px;
+    margin-bottom:24px;
+  }
+  .add-analysis-wrap h4{
+    margin:0 0 14px;
+    font-size:15px;
+    font-weight:500;
+  }
+  .analysis-form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .analysis-form-grid .full{ grid-column:1/-1; }
+  .analysis-form-grid label{
+    display:block;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .analysis-form-grid input,
+  .analysis-form-grid select,
+  .analysis-form-grid textarea{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:4px;
+    padding:9px 11px;
+    font-size:13.5px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  .analysis-form-grid textarea{ min-height:70px; resize:vertical; }
+  .analysis-submit{
+    background:var(--sage);
+    color:#fff;
+    border:none;
+    padding:10px 20px;
+    border-radius:4px;
+    font-size:13.5px;
+    font-weight:500;
+    cursor:pointer;
+    margin-top:12px;
+    font-family:'Inter',sans-serif;
+  }
+  .analysis-submit:hover{ background:#3a5549; }
+  .analysis-remove{
+    background:none; border:none; color:#A85C3A;
+    font-size:12px; cursor:pointer; text-decoration:underline;
+    padding:0; font-family:'Inter',sans-serif; margin-top:4px;
+  }
+
+  /* Nav tabs for patient view */
+  .patient-nav{
+    max-width:1080px;
+    margin:24px auto 0;
+    padding:0 24px;
+    display:flex;
+    gap:4px;
+    border-bottom:1px solid var(--line);
+  }
+  .patient-nav-tab{
+    background:none;
+    border:none;
+    border-bottom:2px solid transparent;
+    padding:10px 18px;
+    font-size:14px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    margin-bottom:-1px;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+  }
+  .patient-nav-tab.active{
+    color:var(--sage);
+    border-bottom-color:var(--sage);
+  }
+  .patient-nav-tab:hover{ color:var(--ink); }
 </style>
 </head>
 <body>
@@ -1059,23 +1214,20 @@
         <h1>Kujdesi shëndetësor, <br/>thjeshtë dhe pranë teje</h1>
         <p>Zgjedh mjekun, shiko terminet e lira dhe rezervo në më pak se një minutë. Çdo rezervim ruhet automatikisht dhe e gjen kur të duash në llogarinë tënde.</p>
         <div class="hero-stats">
-          <div class="hero-stat"><div class="num">6</div><div class="label">Mjekë specialistë</div></div>
+          <div class="hero-stat"><div class="num">9</div><div class="label">Mjekë specialistë</div></div>
           <div class="hero-stat"><div class="num">6</div><div class="label">Ditë në javë</div></div>
           <div class="hero-stat"><div class="num">24/7</div><div class="label">Rezervim online</div></div>
         </div>
       </div>
       <div class="hero-art">
-        <svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="160" cy="140" r="120" fill="#DCE6E1"/>
-          <rect x="95" y="95" width="130" height="100" rx="10" fill="#FFFFFF" stroke="#C4744F" stroke-width="3"/>
-          <line x1="160" y1="118" x2="160" y2="172" stroke="#C4744F" stroke-width="8" stroke-linecap="round"/>
-          <line x1="133" y1="145" x2="187" y2="145" stroke="#C4744F" stroke-width="8" stroke-linecap="round"/>
-          <circle cx="95" cy="95" r="9" fill="#4A6B5E"/>
-          <circle cx="225" cy="95" r="9" fill="#4A6B5E"/>
-          <circle cx="95" cy="195" r="9" fill="#4A6B5E"/>
-          <circle cx="225" cy="195" r="9" fill="#4A6B5E"/>
-          <path d="M40 220 Q160 250 280 220" stroke="#4A6B5E" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
-        </svg>
+        <div style="width:100%;max-width:420px;border-radius:12px;overflow:hidden;box-shadow:0 12px 32px rgba(31,46,43,0.14);">
+          <img
+            src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=840&h=560&fit=crop&auto=format"
+            alt="Klinika moderne"
+            style="width:100%;height:260px;object-fit:cover;display:block;"
+            onerror="this.parentElement.style.display='none'"
+          />
+        </div>
       </div>
     </div>
 
@@ -1091,18 +1243,33 @@
         <p>Shiko historikun e termineve dhe anulo kur është nevoja.</p>
       </div>
       <div class="service-card">
-        <div class="service-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
-        <h4>Mjekë specialistë</h4>
-        <p>Kardiologji, pediatri, dermatologji dhe më shumë, në një vend.</p>
+        <div class="service-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H5a2 2 0 00-2 2v0a2 2 0 002 2h14a2 2 0 002-2v0a2 2 0 00-2-2h-4M12 3v14"/></svg></div>
+        <h4>Analizat tua</h4>
+        <p>Shiko analizat dhe rezultatet mjekësore direkt nga llogaria jote.</p>
       </div>
     </div>
 
-    <div class="ledger-strip">
-      <h2 style="font-size:24px; font-weight:500; margin:0 0 8px;">Zgjedh mjekun dhe rezervo</h2>
-      <p>Kliko mbi profilin e mjekut për të parë terminet e lira dhe për të caktuar takimin tënd.</p>
-      <div class="filter-row" id="filterRow"></div>
+    <div class="patient-nav">
+      <button class="patient-nav-tab active" data-view="doctors">Mjekët</button>
+      <button class="patient-nav-tab" data-view="analyses">Analizat e mia</button>
     </div>
-    <div class="directory" id="directory"></div>
+
+    <div id="doctorsPane">
+      <div class="ledger-strip">
+        <h2 style="font-size:24px;font-weight:500;margin:0 0 8px;">Zgjedh mjekun dhe rezervo</h2>
+        <p>Kliko mbi profilin e mjekut për të parë terminet e lira dhe për të caktuar takimin tënd.</p>
+        <div class="filter-row" id="filterRow"></div>
+      </div>
+      <div class="directory" id="directory"></div>
+    </div>
+
+    <div id="analysesPane" style="display:none;">
+      <div class="analyses-wrap">
+        <h2>Analizat e mia</h2>
+        <p>Rezultatet dhe dokumentet mjekësore të ngarkuara nga personeli i klinikës për llogarinë tënde.</p>
+        <div id="patientAnalysesList"></div>
+      </div>
+    </div>
   </div>
 
   <!-- STAFF VIEW -->
@@ -1122,6 +1289,40 @@
           <button class="admin-add-btn" id="addDoctorBtn">+ Shto mjek</button>
         </div>
         <div class="doctor-manage-grid" id="doctorManageGrid"></div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-section-head">
+          <h3>Analizat e pacientëve</h3>
+        </div>
+        <div class="add-analysis-wrap">
+          <h4>Shto analizë të re</h4>
+          <div class="analysis-form-grid">
+            <div>
+              <label for="anPatient">Pacienti (emri i llogarisë)</label>
+              <input type="text" id="anPatient" placeholder="p.sh. Arta Krasniqi" />
+            </div>
+            <div>
+              <label for="anType">Lloji i analizës</label>
+              <input type="text" id="anType" placeholder="p.sh. Gjaku i plotë, ECG, Rx..." />
+            </div>
+            <div>
+              <label for="anDoctor">Mjeku</label>
+              <select id="anDoctor"></select>
+            </div>
+            <div>
+              <label for="anDate">Data</label>
+              <input type="date" id="anDate" />
+            </div>
+            <div class="full">
+              <label for="anNotes">Rezultati / Shënime</label>
+              <textarea id="anNotes" placeholder="Shkruaj rezultatin ose shënime nga analiza..."></textarea>
+            </div>
+          </div>
+          <button class="analysis-submit" id="addAnalysisBtn">Shto analizën</button>
+          <div class="success-note" id="analysisSuccess" style="margin-top:10px;"></div>
+        </div>
+        <div id="allAnalysesList"></div>
       </div>
 
       <div class="admin-section">
@@ -1203,7 +1404,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc
+  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1241,21 +1442,85 @@ var db = {
   }
 };
 
+/* ---------------------------------------------------------------
+   Real-time listener: thirret kur ndodh çdo ndryshim në Firestore
+   kolleksioni klinika_data — rifresko UI automatikisht
+--------------------------------------------------------------- */
+var realtimeUnsub = null;
+
+function startRealtimeListener(onChangeCallback){
+  if(realtimeUnsub) realtimeUnsub();
+  realtimeUnsub = onSnapshot(
+    collection(firestore, COLLECTION_NAME),
+    function(snapshot){
+      snapshot.docChanges().forEach(function(change){
+        if(change.type === 'modified' || change.type === 'added' || change.type === 'removed'){
+          onChangeCallback(change.doc.id);
+        }
+      });
+    },
+    function(err){ console.warn('Real-time listener gabim:', err); }
+  );
+}
+
+function stopRealtimeListener(){
+  if(realtimeUnsub){ realtimeUnsub(); realtimeUnsub = null; }
+}
+
+/* ---------------------------------------------------------------
+   Session persistence: ruaj login-in në localStorage kështu
+   që mbetet edhe pas rifreskimit të faqes (pa pasur nevojë
+   të hysh prapë çdo herë)
+--------------------------------------------------------------- */
+var SESSION_KEY = 'klinika_session';
+
+function saveSession(sess){
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify(sess)); }
+  catch(e){}
+}
+
+function loadSession(){
+  try{
+    var raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function clearSession(){
+  try{ localStorage.removeItem(SESSION_KEY); }
+  catch(e){}
+}
+
 (function(){
 
   var DEFAULT_DOCTORS = [
     { id:'d1', name:'Dr. Arben Krasniqi', specialty:'Kardiologji', initials:'AK', color:'#4A6B5E',
+      photo:'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Specialist i sëmundjeve të zemrës me 14 vjet përvojë klinike.' },
     { id:'d2', name:'Dr. Lirie Hoxha', specialty:'Pediatri', initials:'LH', color:'#C4744F',
+      photo:'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Kujdes shëndetësor për fëmijë, nga lindja deri në adoleshencë.' },
     { id:'d3', name:'Dr. Besnik Gashi', specialty:'Dermatologji', initials:'BG', color:'#5B5A8C',
+      photo:'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Trajtim i lëkurës, flokëve dhe thonjve, përvojë në dermatologji estetike.' },
     { id:'d4', name:'Dr. Fitore Berisha', specialty:'Gjinekologji', initials:'FB', color:'#A8557A',
+      photo:'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Kujdes gjinekologjik dhe shëndeti riprodhues për gra të çdo moshe.' },
     { id:'d5', name:'Dr. Driton Ahmeti', specialty:'Ortopedi', initials:'DA', color:'#3B6D11',
+      photo:'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Diagnostikim dhe trajtim i lëndimeve të kockave, nyjeve dhe muskujve.' },
     { id:'d6', name:'Dr. Vjosa Mustafa', specialty:'Neurologji', initials:'VM', color:'#185FA5',
-      bio:'Specialiste e sistemit nervor, dhimbjeve të kokës dhe çrregullimeve neurologjike.' }
+      photo:'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=400&h=400&fit=crop&crop=faces&auto=format',
+      bio:'Specialiste e sistemit nervor, dhimbjeve të kokës dhe çrregullimeve neurologjike.' },
+    { id:'d7', name:'Dr. Gentian Morina', specialty:'Dentistri', initials:'GM', color:'#0E7C86',
+      photo:'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=400&h=400&fit=crop&crop=faces&auto=format',
+      bio:'Specialist i shëndetit oral, trajtimeve estetike dhe implanteve dentare.' },
+    { id:'d8', name:'Dr. Teuta Pllana', specialty:'Oftalmologji', initials:'TP', color:'#7B3F00',
+      photo:'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop&crop=faces&auto=format',
+      bio:'Diagnozë dhe trajtim i sëmundjeve të syve, operacione lazer dhe lente.' },
+    { id:'d9', name:'Dr. Faton Berisha', specialty:'Psikiatri', initials:'FB', color:'#5C4033',
+      photo:'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=400&fit=crop&crop=faces&auto=format',
+      bio:'Trajtim i çrregullimeve mendore, ankthit dhe depresionit.' }
   ];
 
   var DOCTORS = DEFAULT_DOCTORS.slice();
@@ -1288,6 +1553,15 @@ var db = {
   }
 
   function portraitSVG(doc){
+    if(doc.photo){
+      return '<img src="' + doc.photo + '" alt="' + escapeHtml(doc.name) + '" style="width:100%;height:100%;object-fit:cover;object-position:top center;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
+        '<svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="display:none;position:absolute;inset:0;width:100%;height:100%">' +
+        '<rect width="200" height="120" fill="' + doc.color + '" opacity="0.14"/>' +
+        '<circle cx="100" cy="58" r="46" fill="' + doc.color + '" opacity="0.22"/>' +
+        '<circle cx="100" cy="44" r="20" fill="' + doc.color + '"/>' +
+        '<path d="M58 118c2-24 18-40 42-40s40 16 42 40" fill="' + doc.color + '"/>' +
+        '</svg>';
+    }
     return '<svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">' +
       '<rect width="200" height="120" fill="' + doc.color + '" opacity="0.14"/>' +
       '<circle cx="100" cy="58" r="46" fill="' + doc.color + '" opacity="0.22"/>' +
@@ -1493,6 +1767,7 @@ var db = {
     var app = document.getElementById('app');
     app.classList.add('show');
 
+    saveSession(session);
     await loadDoctors();
 
     document.getElementById('sessionName').textContent = session.name;
@@ -1503,7 +1778,17 @@ var db = {
       document.getElementById('patientView').style.display = 'none';
       document.getElementById('staffView').style.display = 'block';
       document.getElementById('settingsBtn').style.display = 'flex';
-      renderStaffDashboard();
+      await renderStaffDashboard();
+      await populateAnalysisDoctorSelect();
+      await renderAllAnalyses();
+      startRealtimeListener(function(changedKey){
+        if(changedKey.startsWith('appts:')){
+          renderStaffDashboard();
+        }
+        if(changedKey === 'analyses'){
+          renderAllAnalyses();
+        }
+      });
     }else{
       badge.textContent = 'Pacient';
       badge.classList.remove('staff-badge');
@@ -1512,11 +1797,32 @@ var db = {
       document.getElementById('settingsBtn').style.display = 'none';
       renderFilters();
       renderDirectory();
+      startRealtimeListener(function(changedKey){
+        if(changedKey.startsWith('appts:')){
+          renderDirectory();
+          if(state.selectedDoctor){
+            var docId = changedKey.replace('appts:','');
+            if(docId === state.selectedDoctor.id) renderPanel();
+          }
+        }
+        if(changedKey === 'doctors'){
+          loadDoctors().then(function(){
+            renderFilters();
+            renderDirectory();
+          });
+        }
+        if(changedKey === 'analyses'){
+          var ap = document.getElementById('analysesPane');
+          if(ap && ap.style.display !== 'none') renderPatientAnalyses();
+        }
+      });
     }
   }
 
   function logout(){
     session = null;
+    clearSession();
+    stopRealtimeListener();
     state.selectedDoctor = null;
     state.selectedSlot = null;
     document.getElementById('overlay').classList.remove('open');
@@ -1814,7 +2120,8 @@ var db = {
         DOCTORS = DOCTORS.filter(function(d){ return d.id !== id; });
         await saveDoctors(DOCTORS);
         try{ await db.delete('appts:' + id); }catch(e){}
-        renderStaffDashboard();
+        await renderStaffDashboard();
+        await populateAnalysisDoctorSelect();
       };
     });
   }
@@ -1846,7 +2153,8 @@ var db = {
     DOCTORS.push(newDoc);
     await saveDoctors(DOCTORS);
     closeAddDoctor();
-    renderStaffDashboard();
+    await renderStaffDashboard();
+    await populateAnalysisDoctorSelect();
   }
 
   /* ---------------- Settings / data modal ---------------- */
@@ -1984,6 +2292,149 @@ var db = {
     URL.revokeObjectURL(url);
   }
 
+  /* ---------------- Analyses ---------------- */
+
+  async function loadAnalyses(){
+    try{
+      var res = await db.get('analyses');
+      return JSON.parse(res.value);
+    }catch(e){ return []; }
+  }
+
+  async function saveAnalyses(list){
+    try{ await db.set('analyses', JSON.stringify(list)); }
+    catch(e){ console.error('Ruajtja e analizave dështoi', e); }
+  }
+
+  async function renderPatientAnalyses(){
+    var list = document.getElementById('patientAnalysesList');
+    if(!list) return;
+    var all = await loadAnalyses();
+    var mine = all.filter(function(a){ return a.patientName === session.name; });
+    if(mine.length === 0){
+      list.innerHTML = '<div class="no-analyses">Nuk ke ende analiza të regjistruara. Pasi të kryesh vizitën, mjeku do të shtojë rezultatet këtu.</div>';
+      return;
+    }
+    mine.sort(function(a,b){ return b.addedAt.localeCompare(a.addedAt); });
+    list.innerHTML = '';
+    mine.forEach(function(a){
+      var card = el('div','analysis-card');
+      var dateStr = a.date || '—';
+      card.innerHTML =
+        '<div class="analysis-icon">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' +
+        '</div>' +
+        '<div class="analysis-info">' +
+          '<h4>' + escapeHtml(a.type) + '</h4>' +
+          '<div class="a-meta">' + escapeHtml(a.doctorName) + ' · ' + dateStr + '</div>' +
+          (a.notes ? '<div class="a-notes">' + escapeHtml(a.notes) + '</div>' : '') +
+        '</div>' +
+        '<div class="analysis-date">' + new Date(a.addedAt).toLocaleDateString('sq-AL') + '</div>';
+      list.appendChild(card);
+    });
+  }
+
+  async function renderAllAnalyses(){
+    var list = document.getElementById('allAnalysesList');
+    if(!list) return;
+    var all = await loadAnalyses();
+    if(all.length === 0){
+      list.innerHTML = '<p class="empty-note" style="padding:16px 0;">Nuk ka ende analiza të shtuara.</p>';
+      return;
+    }
+    all.sort(function(a,b){ return b.addedAt.localeCompare(a.addedAt); });
+    list.innerHTML = '';
+    all.forEach(function(a){
+      var card = el('div','analysis-card');
+      card.innerHTML =
+        '<div class="analysis-icon">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+        '</div>' +
+        '<div class="analysis-info">' +
+          '<h4>' + escapeHtml(a.type) + '</h4>' +
+          '<div class="a-meta">Pacienti: <strong>' + escapeHtml(a.patientName) + '</strong> · ' + escapeHtml(a.doctorName) + ' · ' + (a.date||'—') + '</div>' +
+          (a.notes ? '<div class="a-notes">' + escapeHtml(a.notes) + '</div>' : '') +
+          '<button class="analysis-remove" data-id="' + a.id + '">Fshi analizën</button>' +
+        '</div>' +
+        '<div class="analysis-date">' + new Date(a.addedAt).toLocaleDateString('sq-AL') + '</div>';
+      list.appendChild(card);
+    });
+    list.querySelectorAll('.analysis-remove').forEach(function(btn){
+      btn.onclick = async function(){
+        var id = btn.getAttribute('data-id');
+        var updated = (await loadAnalyses()).filter(function(a){ return a.id !== id; });
+        await saveAnalyses(updated);
+        renderAllAnalyses();
+      };
+    });
+  }
+
+  async function populateAnalysisDoctorSelect(){
+    var sel = document.getElementById('anDoctor');
+    if(!sel) return;
+    sel.innerHTML = '';
+    DOCTORS.forEach(function(d){
+      var opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function handleAddAnalysis(){
+    var patient = document.getElementById('anPatient').value.trim();
+    var type = document.getElementById('anType').value.trim();
+    var docId = document.getElementById('anDoctor').value;
+    var date = document.getElementById('anDate').value;
+    var notes = document.getElementById('anNotes').value.trim();
+    var successEl = document.getElementById('analysisSuccess');
+
+    if(!patient || !type){
+      if(!patient) document.getElementById('anPatient').style.borderColor = 'var(--terracotta)';
+      if(!type) document.getElementById('anType').style.borderColor = 'var(--terracotta)';
+      return;
+    }
+    document.getElementById('anPatient').style.borderColor = '';
+    document.getElementById('anType').style.borderColor = '';
+
+    var doc = DOCTORS.find(function(d){ return d.id === docId; });
+    var all = await loadAnalyses();
+    all.push({
+      id: 'an_' + Date.now().toString(36),
+      patientName: patient,
+      type: type,
+      doctorName: doc ? doc.name : '—',
+      date: date,
+      notes: notes,
+      addedAt: new Date().toISOString()
+    });
+    await saveAnalyses(all);
+
+    document.getElementById('anPatient').value = '';
+    document.getElementById('anType').value = '';
+    document.getElementById('anNotes').value = '';
+    document.getElementById('anDate').value = '';
+    successEl.textContent = 'Analiza u shtua me sukses për ' + patient + '.';
+    successEl.classList.add('show');
+    setTimeout(function(){ successEl.classList.remove('show'); }, 3000);
+    renderAllAnalyses();
+  }
+
+  /* ---------------- Patient nav tabs ---------------- */
+
+  function initPatientNav(){
+    document.querySelectorAll('.patient-nav-tab').forEach(function(tab){
+      tab.onclick = function(){
+        document.querySelectorAll('.patient-nav-tab').forEach(function(t){ t.classList.remove('active'); });
+        tab.classList.add('active');
+        var view = tab.getAttribute('data-view');
+        document.getElementById('doctorsPane').style.display = view === 'doctors' ? 'block' : 'none';
+        document.getElementById('analysesPane').style.display = view === 'analyses' ? 'block' : 'none';
+        if(view === 'analyses') renderPatientAnalyses();
+      };
+    });
+  }
+
   /* ---------------- Init ---------------- */
 
   document.getElementById('toPatientTab').onclick = function(){ setAuthMode('patient'); };
@@ -2012,7 +2463,18 @@ var db = {
     if(e.target.id === 'addDoctorOverlay') closeAddDoctor();
   };
 
+  document.getElementById('addAnalysisBtn').onclick = handleAddAnalysis;
+
+  initPatientNav();
+
   setAuthMode('patient');
+
+  /* --- Auto-login --- */
+  var savedSession = loadSession();
+  if(savedSession && savedSession.role && savedSession.name){
+    session = savedSession;
+    enterApp();
+  }
 
 })();
 </script>
