@@ -1309,7 +1309,7 @@
             <div>
               <label for="anPatientCode">Kodi i pacientit (4 shifra)</label>
               <input type="text" id="anPatientCode" placeholder="p.sh. 4821" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" />
-              <div id="anPatientPreview" style="font-size:12.5px;color:var(--ink-soft);margin:-8px 0 12px;"></div>
+              <div id="anPatientPreview" style="font-size:12.5px;color:var(--ink-soft);margin:4px 0 14px;line-height:1.4;"></div>
             </div>
             <div>
               <label for="anType">Lloji i analizës</label>
@@ -1888,8 +1888,7 @@ function clearSession(){
           });
         }
         if(changedKey === 'analyses'){
-          var ap = document.getElementById('analysesPane');
-          if(ap && ap.style.display !== 'none') renderPatientAnalyses();
+          renderPatientAnalyses();
         }
       });
     }
@@ -2418,7 +2417,12 @@ function clearSession(){
     var list = document.getElementById('patientAnalysesList');
     if(!list) return;
     var all = await loadAnalyses();
-    var mine = all.filter(function(a){ return a.patientName === session.name; });
+    var mine = all.filter(function(a){
+      if(session.code && a.patientCode){
+        return a.patientCode === session.code;
+      }
+      return a.patientName.trim().toLowerCase() === session.name.trim().toLowerCase();
+    });
     if(mine.length === 0){
       list.innerHTML = '<div class="no-analyses">Nuk ke ende analiza të regjistruara. Pasi të kryesh vizitën, mjeku do të shtojë rezultatet këtu.</div>';
       return;
