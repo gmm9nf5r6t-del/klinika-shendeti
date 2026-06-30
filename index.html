@@ -1198,6 +1198,7 @@
       <div class="session-info">
         <span id="sessionName"></span>
         <span class="session-badge" id="sessionBadge"></span>
+        <span class="session-badge" id="sessionCodeBadge" style="display:none;"></span>
         <button class="settings-btn" id="settingsBtn" style="display:none;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Të dhënat
@@ -1267,6 +1268,10 @@
       <div class="analyses-wrap">
         <h2>Analizat e mia</h2>
         <p>Rezultatet dhe dokumentet mjekësore të ngarkuara nga personeli i klinikës për llogarinë tënde.</p>
+        <div id="myCodeBox" style="background:var(--sage-light);border:1px solid var(--sage);border-radius:8px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:13.5px;color:var(--sage);">Jepi këtë kod mjekut tënd për të marrë analizat:</span>
+          <span id="myCodeValue" style="font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--sage);letter-spacing:2px;"></span>
+        </div>
         <div id="patientAnalysesList"></div>
       </div>
     </div>
@@ -1299,8 +1304,9 @@
           <h4>Shto analizë të re</h4>
           <div class="analysis-form-grid">
             <div>
-              <label for="anPatient">Pacienti (emri i llogarisë)</label>
-              <input type="text" id="anPatient" placeholder="p.sh. Arta Krasniqi" />
+              <label for="anPatientCode">Kodi i pacientit (4 shifra)</label>
+              <input type="text" id="anPatientCode" placeholder="p.sh. 4821" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" />
+              <div id="anPatientPreview" style="font-size:12.5px;color:var(--ink-soft);margin:-8px 0 12px;"></div>
             </div>
             <div>
               <label for="anType">Lloji i analizës</label>
@@ -1533,7 +1539,11 @@ function clearSession(){
       if(res && res.value){
         var parsed = JSON.parse(res.value);
         if(Array.isArray(parsed) && parsed.length){
-          DOCTORS = parsed;
+          var deduped = dedupeDoctorsByName(parsed);
+          DOCTORS = deduped.list;
+          if(deduped.removed > 0){
+            await saveDoctors(DOCTORS);
+          }
           return DOCTORS;
         }
       }
@@ -1541,6 +1551,22 @@ function clearSession(){
     DOCTORS = DEFAULT_DOCTORS.slice();
     await saveDoctors(DOCTORS);
     return DOCTORS;
+  }
+
+  function dedupeDoctorsByName(list){
+    var seen = {};
+    var out = [];
+    var removed = 0;
+    list.forEach(function(d){
+      var key = (d.name||'').trim().toLowerCase();
+      if(seen[key]){
+        removed++;
+      }else{
+        seen[key] = true;
+        out.push(d);
+      }
+    });
+    return { list: out, removed: removed };
   }
 
   async function saveDoctors(list){
@@ -1723,9 +1749,10 @@ function clearSession(){
         showAuthError('Ky emër ekziston tashmë. Provo të hysh në vend se të krijosh llogari të re.');
         return;
       }
-      patients.push({ name:name, password:pass });
+      var newCode = generateUniquePatientCode(patients);
+      patients.push({ name:name, password:pass, code:newCode });
       await savePatients(patients);
-      session = { role:'patient', name:name };
+      session = { role:'patient', name:name, code:newCode };
       await logLogin(session.name, 'patient');
       enterApp();
     }else{
@@ -1737,10 +1764,24 @@ function clearSession(){
         showAuthError('Fjalëkalimi është i pasaktë.');
         return;
       }
-      session = { role:'patient', name:name };
+      if(!existing.code){
+        existing.code = generateUniquePatientCode(patients);
+        await savePatients(patients);
+      }
+      session = { role:'patient', name:name, code:existing.code };
       await logLogin(session.name, 'patient');
       enterApp();
     }
+  }
+
+  function generateUniquePatientCode(existingPatients){
+    var usedCodes = {};
+    existingPatients.forEach(function(p){ if(p.code) usedCodes[p.code] = true; });
+    var code;
+    do{
+      code = String(Math.floor(1000 + Math.random() * 9000));
+    }while(usedCodes[code]);
+    return code;
   }
 
   async function logLogin(name, role){
@@ -1772,14 +1813,17 @@ function clearSession(){
 
     document.getElementById('sessionName').textContent = session.name;
     var badge = document.getElementById('sessionBadge');
+    var codeBadge = document.getElementById('sessionCodeBadge');
     if(session.role === 'staff'){
       badge.textContent = 'Personel';
       badge.classList.add('staff-badge');
+      codeBadge.style.display = 'none';
       document.getElementById('patientView').style.display = 'none';
       document.getElementById('staffView').style.display = 'block';
       document.getElementById('settingsBtn').style.display = 'flex';
       await renderStaffDashboard();
       await populateAnalysisDoctorSelect();
+      setupPatientCodePreview();
       await renderAllAnalyses();
       startRealtimeListener(function(changedKey){
         if(changedKey.startsWith('appts:')){
@@ -1792,6 +1836,12 @@ function clearSession(){
     }else{
       badge.textContent = 'Pacient';
       badge.classList.remove('staff-badge');
+      if(session.code){
+        codeBadge.textContent = 'Kodi: ' + session.code;
+        codeBadge.style.display = 'inline-block';
+      }else{
+        codeBadge.style.display = 'none';
+      }
       document.getElementById('patientView').style.display = 'block';
       document.getElementById('staffView').style.display = 'none';
       document.getElementById('settingsBtn').style.display = 'none';
@@ -2002,6 +2052,7 @@ function clearSession(){
     appts.push({
       slotKey: state.selectedSlot,
       patientName: session.name,
+      patientCode: session.code || '—',
       reason: reason,
       bookedAt: new Date().toISOString()
     });
@@ -2054,13 +2105,14 @@ function clearSession(){
     all.sort(function(a,b){ return a.slotKey.localeCompare(b.slotKey); });
 
     var html = '<table class="staff-table"><thead><tr>' +
-      '<th>Pacienti</th><th>Mjeku</th><th>Termini</th><th>Arsyeja</th><th></th>' +
+      '<th>Pacienti</th><th>Kodi</th><th>Mjeku</th><th>Termini</th><th>Arsyeja</th><th></th>' +
       '</tr></thead><tbody>';
 
     all.forEach(function(a){
       var parts = a.slotKey.split('|');
       html += '<tr>' +
         '<td>' + a.patientName + '</td>' +
+        '<td style="font-weight:500;color:var(--sage);">' + (a.patientCode || '—') + '</td>' +
         '<td>' + a._doctorName + '</td>' +
         '<td>' + parts[0] + '<br><span style="color:var(--ink-soft)">' + parts[1] + '</span></td>' +
         '<td>' + (a.reason ? a.reason : '<span style="color:var(--ink-soft)">—</span>') + '</td>' +
@@ -2141,6 +2193,12 @@ function clearSession(){
     var bio = document.getElementById('newDocBio').value.trim();
     if(!name || !specialty) return;
 
+    var dup = DOCTORS.some(function(d){ return d.name.trim().toLowerCase() === name.toLowerCase(); });
+    if(dup){
+      alert('Ekziston tashmë një mjek me këtë emër (' + name + '). Përdor një emër tjetër.');
+      return;
+    }
+
     var color = DOCTOR_COLORS[DOCTORS.length % DOCTOR_COLORS.length];
     var newDoc = {
       id: makeDoctorId(),
@@ -2203,11 +2261,11 @@ function clearSession(){
         html += '<div class="staff-empty">Nuk ka ende termine të rezervuara.</div>';
       }else{
         all.sort(function(a,b){ return a.slotKey.localeCompare(b.slotKey); });
-        html += '<table class="staff-table"><thead><tr><th>Pacienti</th><th>Mjeku</th><th>Termini</th><th>Arsyeja</th><th>Rezervuar më</th></tr></thead><tbody>';
+        html += '<table class="staff-table"><thead><tr><th>Pacienti</th><th>Kodi</th><th>Mjeku</th><th>Termini</th><th>Arsyeja</th><th>Rezervuar më</th></tr></thead><tbody>';
         all.forEach(function(a){
           var parts = a.slotKey.split('|');
           var bookedDate = a.bookedAt ? new Date(a.bookedAt).toLocaleString('sq-AL') : '—';
-          html += '<tr><td>' + escapeHtml(a.patientName) + '</td><td>' + escapeHtml(a._doctorName) + '</td>' +
+          html += '<tr><td>' + escapeHtml(a.patientName) + '</td><td style="color:var(--sage);font-weight:500;">' + (a.patientCode||'—') + '</td><td>' + escapeHtml(a._doctorName) + '</td>' +
             '<td>' + parts[0] + '<br><span style="color:var(--ink-soft)">' + parts[1] + '</span></td>' +
             '<td>' + (a.reason ? escapeHtml(a.reason) : '—') + '</td>' +
             '<td style="font-size:12px; color:var(--ink-soft);">' + bookedDate + '</td></tr>';
@@ -2381,27 +2439,59 @@ function clearSession(){
     });
   }
 
+  async function lookupPatientByCode(code){
+    var patients = await getPatients();
+    return patients.find(function(p){ return p.code === code; }) || null;
+  }
+
+  function setupPatientCodePreview(){
+    var input = document.getElementById('anPatientCode');
+    var preview = document.getElementById('anPatientPreview');
+    if(!input) return;
+    input.oninput = async function(){
+      var code = input.value.trim();
+      if(code.length === 4){
+        var p = await lookupPatientByCode(code);
+        preview.textContent = p ? ('✓ ' + p.name) : '✗ Nuk u gjet pacient me këtë kod';
+        preview.style.color = p ? 'var(--sage)' : 'var(--terracotta)';
+      }else{
+        preview.textContent = '';
+      }
+    };
+  }
+
   async function handleAddAnalysis(){
-    var patient = document.getElementById('anPatient').value.trim();
+    var codeInput = document.getElementById('anPatientCode');
+    var code = codeInput ? codeInput.value.trim() : '';
     var type = document.getElementById('anType').value.trim();
     var docId = document.getElementById('anDoctor').value;
     var date = document.getElementById('anDate').value;
     var notes = document.getElementById('anNotes').value.trim();
     var successEl = document.getElementById('analysisSuccess');
+    var preview = document.getElementById('anPatientPreview');
 
-    if(!patient || !type){
-      if(!patient) document.getElementById('anPatient').style.borderColor = 'var(--terracotta)';
+    if(!/^[0-9]{4}$/.test(code) || !type){
+      if(!/^[0-9]{4}$/.test(code)) codeInput.style.borderColor = 'var(--terracotta)';
       if(!type) document.getElementById('anType').style.borderColor = 'var(--terracotta)';
       return;
     }
-    document.getElementById('anPatient').style.borderColor = '';
+
+    var patient = await lookupPatientByCode(code);
+    if(!patient){
+      codeInput.style.borderColor = 'var(--terracotta)';
+      preview.textContent = '✗ Nuk u gjet pacient me këtë kod';
+      preview.style.color = 'var(--terracotta)';
+      return;
+    }
+    codeInput.style.borderColor = '';
     document.getElementById('anType').style.borderColor = '';
 
     var doc = DOCTORS.find(function(d){ return d.id === docId; });
     var all = await loadAnalyses();
     all.push({
       id: 'an_' + Date.now().toString(36),
-      patientName: patient,
+      patientName: patient.name,
+      patientCode: patient.code,
       type: type,
       doctorName: doc ? doc.name : '—',
       date: date,
@@ -2410,13 +2500,14 @@ function clearSession(){
     });
     await saveAnalyses(all);
 
-    document.getElementById('anPatient').value = '';
+    codeInput.value = '';
+    preview.textContent = '';
     document.getElementById('anType').value = '';
     document.getElementById('anNotes').value = '';
     document.getElementById('anDate').value = '';
-    successEl.textContent = 'Analiza u shtua me sukses për ' + patient + '.';
+    successEl.textContent = 'Analiza u dërgua me sukses te ' + patient.name + ' (kodi ' + patient.code + ').';
     successEl.classList.add('show');
-    setTimeout(function(){ successEl.classList.remove('show'); }, 3000);
+    setTimeout(function(){ successEl.classList.remove('show'); }, 3500);
     renderAllAnalyses();
   }
 
@@ -2430,7 +2521,11 @@ function clearSession(){
         var view = tab.getAttribute('data-view');
         document.getElementById('doctorsPane').style.display = view === 'doctors' ? 'block' : 'none';
         document.getElementById('analysesPane').style.display = view === 'analyses' ? 'block' : 'none';
-        if(view === 'analyses') renderPatientAnalyses();
+        if(view === 'analyses'){
+          var codeEl = document.getElementById('myCodeValue');
+          if(codeEl) codeEl.textContent = session.code || '—';
+          renderPatientAnalyses();
+        }
       };
     });
   }
