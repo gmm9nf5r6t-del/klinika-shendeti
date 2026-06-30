@@ -1291,7 +1291,10 @@
       <div class="admin-section">
         <div class="admin-section-head">
           <h3>Mjekët</h3>
-          <button class="admin-add-btn" id="addDoctorBtn">+ Shto mjek</button>
+          <div style="display:flex;gap:8px;">
+            <button class="admin-add-btn" id="cleanupDoctorsBtn" style="background:var(--terracotta);">Pastro dublikatët</button>
+            <button class="admin-add-btn" id="addDoctorBtn">+ Shto mjek</button>
+          </div>
         </div>
         <div class="doctor-manage-grid" id="doctorManageGrid"></div>
       </div>
@@ -1547,10 +1550,33 @@ function clearSession(){
           return DOCTORS;
         }
       }
-    }catch(e){}
-    DOCTORS = DEFAULT_DOCTORS.slice();
-    await saveDoctors(DOCTORS);
-    return DOCTORS;
+      // Kyçi ekziston por është bosh/i pavlefshëm — krijo listën default
+      DOCTORS = DEFAULT_DOCTORS.slice();
+      await saveDoctors(DOCTORS);
+      return DOCTORS;
+    }catch(e){
+      // Gabim real (kyçi nuk ekziston ende, ose problem rrjeti).
+      // Provo edhe njëherë para se të rezetojmë krejt listën,
+      // që mos të humbim mjekët ekzistues për shkak të një gabimi të përkohshëm.
+      console.warn('loadDoctors gabim i parë, po provoj prapë:', e);
+      try{
+        var res2 = await db.get('doctors');
+        if(res2 && res2.value){
+          var parsed2 = JSON.parse(res2.value);
+          if(Array.isArray(parsed2) && parsed2.length){
+            var deduped2 = dedupeDoctorsByName(parsed2);
+            DOCTORS = deduped2.list;
+            if(deduped2.removed > 0) await saveDoctors(DOCTORS);
+            return DOCTORS;
+          }
+        }
+      }catch(e2){
+        console.warn('Kyçi "doctors" vërtet nuk ekziston, krijoj listën default.', e2);
+      }
+      DOCTORS = DEFAULT_DOCTORS.slice();
+      await saveDoctors(DOCTORS);
+      return DOCTORS;
+    }
   }
 
   function dedupeDoctorsByName(list){
@@ -2143,6 +2169,21 @@ function clearSession(){
     return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
   }
 
+  async function handleCleanupDuplicates(){
+    var before = DOCTORS.length;
+    var deduped = dedupeDoctorsByName(DOCTORS);
+    DOCTORS = deduped.list;
+    await saveDoctors(DOCTORS);
+    await renderStaffDashboard();
+    await populateAnalysisDoctorSelect();
+    var removed = before - DOCTORS.length;
+    if(removed > 0){
+      alert('U hoqën ' + removed + ' mjekë të dyfishuar. Tani ka ' + DOCTORS.length + ' mjekë.');
+    }else{
+      alert('Nuk u gjet asnjë dublikatë. Lista ka ' + DOCTORS.length + ' mjekë unikë.');
+    }
+  }
+
   async function renderDoctorManageGrid(){
     var grid = document.getElementById('doctorManageGrid');
     if(!grid) return;
@@ -2279,21 +2320,30 @@ function clearSession(){
       if(csvBtn) csvBtn.onclick = function(){ downloadFile('terminet.csv', apptsToCsv(all), 'text/csv'); };
 
     }else if(settingsTab === 'patients'){
+      var needsSave = false;
+      patients.forEach(function(p){
+        if(!p.code){
+          p.code = generateUniquePatientCode(patients);
+          needsSave = true;
+        }
+      });
+      if(needsSave) await savePatients(patients);
+
       var html = '<div class="settings-export"><button class="export-btn" id="exportPatientsBtn">Shkarko si JSON</button></div>';
       if(patients.length === 0){
         html += '<div class="staff-empty">Asnjë pacient i regjistruar ende.</div>';
       }else{
-        html += '<div class="patients-list-wrap"><table class="staff-table"><thead><tr><th>Emri</th><th>Numri i termineve</th></tr></thead><tbody>';
+        html += '<div class="patients-list-wrap"><table class="staff-table"><thead><tr><th>Emri</th><th>Kodi</th><th>Numri i termineve</th></tr></thead><tbody>';
         patients.forEach(function(p){
           var count = all.filter(function(a){ return a.patientName === p.name; }).length;
-          html += '<tr><td>' + escapeHtml(p.name) + '</td><td>' + count + '</td></tr>';
+          html += '<tr><td>' + escapeHtml(p.name) + '</td><td style="font-weight:500;color:var(--sage);">' + (p.code||'—') + '</td><td>' + count + '</td></tr>';
         });
         html += '</tbody></table></div>';
       }
       box.innerHTML = html;
       var pBtn = document.getElementById('exportPatientsBtn');
       if(pBtn) pBtn.onclick = function(){
-        var safe = patients.map(function(p){ return { name:p.name }; });
+        var safe = patients.map(function(p){ return { name:p.name, code:p.code }; });
         downloadFile('pacientet.json', JSON.stringify(safe, null, 2), 'application/json');
       };
 
@@ -2552,6 +2602,7 @@ function clearSession(){
   });
 
   document.getElementById('addDoctorBtn').onclick = openAddDoctor;
+  document.getElementById('cleanupDoctorsBtn').onclick = handleCleanupDuplicates;
   document.getElementById('addDoctorCloseBtn').onclick = closeAddDoctor;
   document.getElementById('addDoctorForm').onsubmit = handleAddDoctor;
   document.getElementById('addDoctorOverlay').onclick = function(e){
