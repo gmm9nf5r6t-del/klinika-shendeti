@@ -840,16 +840,47 @@
   .patients-list-wrap table.staff-table{ font-size:13px; }
 
   @media (max-width: 840px){
-    .hero{ grid-template-columns:1fr; }
+    .hero{ grid-template-columns:1fr; padding-top:28px; }
     .hero-art{ order:-1; max-width:240px; margin:0 auto; }
+    .hero-text h1{ font-size:30px; }
     .footer-inner{ grid-template-columns:1fr; gap:20px; }
+    .analysis-form-grid{ grid-template-columns:1fr; }
+    .topbar-inner{ flex-wrap:wrap; gap:10px 16px; padding:14px 18px; }
+    .admin-topstrip-inner{ padding:26px 18px 22px; }
+    .admin-topstrip-inner h1{ font-size:23px; }
   }
   @media (max-width: 600px){
     .slot-grid{ grid-template-columns:repeat(2, 1fr); }
-    .panel{ width:100%; }
-    table.staff-table{ font-size:12.5px; }
-    table.staff-table th, table.staff-table td{ padding:8px 8px; }
+    .panel{ width:100%; padding:22px 18px 32px; }
     .settings-modal{ max-height:94vh; }
+    .ledger-strip{ padding:24px 18px 8px; }
+    .ledger-strip h2{ font-size:20px !important; }
+    .directory{ padding:14px 18px 44px; gap:14px; }
+    .services{ padding:22px 18px; }
+    .analyses-wrap, .staff-dash{ padding-left:18px; padding-right:18px; }
+    .patient-nav{ padding:0 18px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .patient-nav-tab{ padding:10px 12px; font-size:13px; white-space:nowrap; }
+    .session-info{ gap:8px; font-size:12px; flex-wrap:wrap; }
+    .hero-stats{ gap:18px; flex-wrap:wrap; }
+    /* Tabelat rrëshqasin horizontalisht në vend që të prishin faqen */
+    .staff-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    table.staff-table{ font-size:12.5px; min-width:560px; }
+    table.staff-table th, table.staff-table td{ padding:8px 8px; }
+    .admin-section-head{ flex-wrap:wrap; gap:8px; }
+    .admin-section-head > div{ width:100%; display:flex; gap:8px; }
+    .admin-add-btn{ flex:1; }
+    .invoice-card{ padding:14px; }
+    .doc-portrait{ height:100px; }
+    /* Fusha inputesh të mëdha mjaftueshëm sa iOS të mos zmadhojë automatikisht faqen */
+    input, textarea, select{ font-size:16px !important; }
+    .auth-submit, .confirm-btn, .analysis-submit, .add-doc-submit{ padding:13px; }
+    .slot-btn{ padding:11px 6px; }
+  }
+  @media (max-width: 380px){
+    .hero-stats{ gap:12px; }
+    .hero-stat .num{ font-size:20px; }
+    .directory{ grid-template-columns:1fr; }
+    .doctor-manage-grid{ grid-template-columns:1fr; }
   }
   /* ---------- Staff dashboard (admin look) ---------- */
   .admin-topstrip{
@@ -1151,6 +1182,116 @@
     border-bottom-color:var(--sage);
   }
   .patient-nav-tab:hover{ color:var(--ink); }
+
+  /* ---------- Next appointment reminder banner ---------- */
+  .next-appt-banner{
+    max-width:1080px;
+    margin:20px auto 0;
+    padding:0 24px;
+  }
+  .next-appt-card{
+    background:var(--sage);
+    color:#fff;
+    border-radius:8px;
+    padding:16px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .next-appt-card .nab-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    opacity:0.8;
+    margin-bottom:3px;
+  }
+  .next-appt-card .nab-main{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    font-weight:500;
+  }
+  .next-appt-card .nab-sub{
+    font-size:13px;
+    opacity:0.9;
+  }
+  @media (max-width:600px){
+    .next-appt-banner{ padding:0 18px; }
+    .next-appt-card{ padding:14px 16px; }
+  }
+
+  /* ---------- Invoices (Faturat) ---------- */
+  .price-presets{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin:-6px 0 14px;
+  }
+  .price-chip{
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink-soft);
+    font-size:12.5px;
+    padding:5px 12px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  .price-chip:hover, .price-chip.active{
+    border-color:var(--terracotta);
+    color:var(--terracotta-dark);
+    background:#FEF0E7;
+  }
+  .invoice-card{
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    border-radius:8px;
+    padding:16px 18px;
+    margin-bottom:12px;
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+  .invoice-info h4{ margin:0 0 3px; font-size:15px; font-weight:500; }
+  .invoice-info .inv-meta{ font-size:12.5px; color:var(--ink-soft); margin-bottom:4px; }
+  .invoice-amount{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    font-weight:600;
+    color:var(--terracotta-dark);
+    white-space:nowrap;
+  }
+  .invoice-actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
+  .invoice-print-btn{
+    background:var(--sage);
+    color:#fff;
+    border:none;
+    font-size:12.5px;
+    padding:7px 13px;
+    border-radius:4px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .invoice-print-btn:hover{ background:#3a5549; }
+  .invoice-remove{
+    background:none; border:none; color:#A85C3A;
+    font-size:12px; cursor:pointer; text-decoration:underline;
+    padding:0; font-family:'Inter',sans-serif;
+  }
+
+  #printArea{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{ display:block; position:absolute; top:0; left:0; width:100%; padding:30px; }
+  }
+
+  @media (max-width: 480px){
+    .invoice-card{ flex-direction:column; align-items:stretch; }
+    .invoice-actions{ justify-content:flex-end; }
+  }
 </style>
 </head>
 <body>
@@ -1253,9 +1394,11 @@
     <div class="patient-nav">
       <button class="patient-nav-tab active" data-view="doctors">Mjekët</button>
       <button class="patient-nav-tab" data-view="analyses">Analizat e mia</button>
+      <button class="patient-nav-tab" data-view="invoices">Faturat e mia</button>
     </div>
 
     <div id="doctorsPane">
+      <div id="nextApptBanner"></div>
       <div class="ledger-strip">
         <h2 style="font-size:24px;font-weight:500;margin:0 0 8px;">Zgjedh mjekun dhe rezervo</h2>
         <p>Kliko mbi profilin e mjekut për të parë terminet e lira dhe për të caktuar takimin tënd.</p>
@@ -1273,6 +1416,14 @@
           <span id="myCodeValue" style="font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--sage);letter-spacing:2px;"></span>
         </div>
         <div id="patientAnalysesList"></div>
+      </div>
+    </div>
+
+    <div id="invoicesPane" style="display:none;">
+      <div class="analyses-wrap">
+        <h2>Faturat e mia</h2>
+        <p>Faturat e lëshuara nga klinika për shërbimet e kryera. Mund t'i printosh ose t'i ruash si PDF.</p>
+        <div id="patientInvoicesList"></div>
       </div>
     </div>
   </div>
@@ -1336,6 +1487,46 @@
 
       <div class="admin-section">
         <div class="admin-section-head">
+          <h3>Faturat</h3>
+        </div>
+        <div class="add-analysis-wrap">
+          <h4>Krijo faturë të re</h4>
+          <div class="analysis-form-grid">
+            <div>
+              <label for="invPatientCode">Kodi i pacientit (4 shifra)</label>
+              <input type="text" id="invPatientCode" placeholder="p.sh. 4821" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" />
+              <div id="invPatientPreview" style="font-size:12.5px;color:var(--ink-soft);margin:4px 0 14px;line-height:1.4;"></div>
+            </div>
+            <div>
+              <label for="invService">Shërbimi</label>
+              <input type="text" id="invService" placeholder="p.sh. Konsultë, Ekzaminim, Analizë..." />
+            </div>
+            <div>
+              <label for="invDoctor">Mjeku</label>
+              <select id="invDoctor"></select>
+            </div>
+            <div>
+              <label for="invDate">Data</label>
+              <input type="date" id="invDate" />
+            </div>
+            <div class="full">
+              <label for="invAmount">Shuma (€)</label>
+              <div class="price-presets" id="invPricePresets"></div>
+              <input type="number" id="invAmount" placeholder="p.sh. 20" min="0" step="0.5" />
+            </div>
+            <div class="full">
+              <label for="invNotes">Shënim shtesë (opsionale)</label>
+              <textarea id="invNotes" placeholder="Shënim që do shfaqet në faturë..."></textarea>
+            </div>
+          </div>
+          <button class="analysis-submit" id="addInvoiceBtn">Krijo faturën</button>
+          <div class="success-note" id="invoiceSuccess" style="margin-top:10px;"></div>
+        </div>
+        <div id="allInvoicesList"></div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-section-head">
           <h3>Të gjitha terminet</h3>
         </div>
         <div class="staff-table-wrap" id="staffTableWrap"></div>
@@ -1370,6 +1561,8 @@
 <div class="overlay" id="overlay">
   <div class="panel" id="panel"></div>
 </div>
+
+<div id="printArea"></div>
 
 <div class="settings-overlay" id="settingsOverlay">
   <div class="settings-modal">
@@ -1504,31 +1697,22 @@ function clearSession(){
 
   var DEFAULT_DOCTORS = [
     { id:'d1', name:'Dr. Arben Krasniqi', specialty:'Kardiologji', initials:'AK', color:'#4A6B5E',
-      photo:'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Specialist i sëmundjeve të zemrës me 14 vjet përvojë klinike.' },
     { id:'d2', name:'Dr. Lirie Hoxha', specialty:'Pediatri', initials:'LH', color:'#C4744F',
-      photo:'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Kujdes shëndetësor për fëmijë, nga lindja deri në adoleshencë.' },
     { id:'d3', name:'Dr. Besnik Gashi', specialty:'Dermatologji', initials:'BG', color:'#5B5A8C',
-      photo:'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Trajtim i lëkurës, flokëve dhe thonjve, përvojë në dermatologji estetike.' },
     { id:'d4', name:'Dr. Fitore Berisha', specialty:'Gjinekologji', initials:'FB', color:'#A8557A',
-      photo:'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Kujdes gjinekologjik dhe shëndeti riprodhues për gra të çdo moshe.' },
     { id:'d5', name:'Dr. Driton Ahmeti', specialty:'Ortopedi', initials:'DA', color:'#3B6D11',
-      photo:'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Diagnostikim dhe trajtim i lëndimeve të kockave, nyjeve dhe muskujve.' },
     { id:'d6', name:'Dr. Vjosa Mustafa', specialty:'Neurologji', initials:'VM', color:'#185FA5',
-      photo:'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Specialiste e sistemit nervor, dhimbjeve të kokës dhe çrregullimeve neurologjike.' },
     { id:'d7', name:'Dr. Gentian Morina', specialty:'Dentistri', initials:'GM', color:'#0E7C86',
-      photo:'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Specialist i shëndetit oral, trajtimeve estetike dhe implanteve dentare.' },
     { id:'d8', name:'Dr. Teuta Pllana', specialty:'Oftalmologji', initials:'TP', color:'#7B3F00',
-      photo:'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Diagnozë dhe trajtim i sëmundjeve të syve, operacione lazer dhe lente.' },
     { id:'d9', name:'Dr. Faton Berisha', specialty:'Psikiatri', initials:'FB', color:'#5C4033',
-      photo:'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=400&fit=crop&crop=faces&auto=format',
       bio:'Trajtim i çrregullimeve mendore, ankthit dhe depresionit.' }
   ];
 
@@ -1579,20 +1763,40 @@ function clearSession(){
     }
   }
 
+  // Normalizon emrin (heq hapësira të tepërta/dyfishta, shkronja të vogla) që "Dr.  Arben"
+  // dhe "Dr. Arben" (me hapësirë të dyfishtë) të njihen si i njëjti mjek.
+  function normName(s){
+    return String(s||'').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
   function dedupeDoctorsByName(list){
-    var seen = {};
+    var seenName = {};
+    var seenId = {};
     var out = [];
     var removed = 0;
     list.forEach(function(d){
-      var key = (d.name||'').trim().toLowerCase();
-      if(seen[key]){
+      var nameKey = normName(d.name);
+      var idKey = d.id || '';
+      if(seenName[nameKey] || (idKey && seenId[idKey])){
         removed++;
       }else{
-        seen[key] = true;
+        seenName[nameKey] = true;
+        if(idKey) seenId[idKey] = true;
         out.push(d);
       }
     });
     return { list: out, removed: removed };
+  }
+
+  // Thirret para çdo rikthimi (render) të mjekëve — vetëshërohet nëse gjendet
+  // ndonjë dublikatë, në vend që t'i tregojë përdoruesit mjekët dy herë.
+  async function ensureDoctorsDeduped(){
+    var deduped = dedupeDoctorsByName(DOCTORS);
+    if(deduped.removed > 0){
+      DOCTORS = deduped.list;
+      await saveDoctors(DOCTORS);
+    }
+    return DOCTORS;
   }
 
   async function saveDoctors(list){
@@ -1605,15 +1809,7 @@ function clearSession(){
   }
 
   function portraitSVG(doc){
-    if(doc.photo){
-      return '<img src="' + doc.photo + '" alt="' + escapeHtml(doc.name) + '" style="width:100%;height:100%;object-fit:cover;object-position:top center;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
-        '<svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="display:none;position:absolute;inset:0;width:100%;height:100%">' +
-        '<rect width="200" height="120" fill="' + doc.color + '" opacity="0.14"/>' +
-        '<circle cx="100" cy="58" r="46" fill="' + doc.color + '" opacity="0.22"/>' +
-        '<circle cx="100" cy="44" r="20" fill="' + doc.color + '"/>' +
-        '<path d="M58 118c2-24 18-40 42-40s40 16 42 40" fill="' + doc.color + '"/>' +
-        '</svg>';
-    }
+    // Vetëm figurë e gjeneruar (pa foto reale) — çdo mjek merr një avatar simbolik me ngjyrën e tij
     return '<svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">' +
       '<rect width="200" height="120" fill="' + doc.color + '" opacity="0.14"/>' +
       '<circle cx="100" cy="58" r="46" fill="' + doc.color + '" opacity="0.22"/>' +
@@ -1851,12 +2047,26 @@ function clearSession(){
       await populateAnalysisDoctorSelect();
       setupPatientCodePreview();
       await renderAllAnalyses();
+      await populateInvoiceDoctorSelect();
+      setupInvoicePatientCodePreview();
+      setupInvoicePricePresets();
+      await renderAllInvoices();
       startRealtimeListener(function(changedKey){
         if(changedKey.startsWith('appts:')){
           renderStaffDashboard();
         }
         if(changedKey === 'analyses'){
           renderAllAnalyses();
+        }
+        if(changedKey === 'doctors'){
+          loadDoctors().then(function(){
+            renderStaffDashboard();
+            populateAnalysisDoctorSelect();
+            populateInvoiceDoctorSelect();
+          });
+        }
+        if(changedKey === 'invoices'){
+          renderAllInvoices();
         }
       });
     }else{
@@ -1889,6 +2099,9 @@ function clearSession(){
         }
         if(changedKey === 'analyses'){
           renderPatientAnalyses();
+        }
+        if(changedKey === 'invoices'){
+          renderPatientInvoices();
         }
       });
     }
@@ -1939,6 +2152,8 @@ function clearSession(){
   }
 
   async function renderDirectory(){
+    await ensureDoctorsDeduped();
+    await renderNextApptBanner();
     var dir = document.getElementById('directory');
     dir.innerHTML = '';
     var list = currentFilter ? DOCTORS.filter(function(d){ return d.specialty === currentFilter; }) : DOCTORS;
@@ -1971,6 +2186,28 @@ function clearSession(){
     }
   }
 
+  async function renderNextApptBanner(){
+    var host = document.getElementById('nextApptBanner');
+    if(!host || !session || session.role !== 'patient') return;
+    var all = await loadAllAppointments();
+    var mine = all.filter(function(a){ return a.patientName === session.name; });
+    if(mine.length === 0){
+      host.innerHTML = '';
+      return;
+    }
+    mine.sort(function(a,b){ return a.slotKey.localeCompare(b.slotKey); });
+    var next = mine[0];
+    var parts = next.slotKey.split('|');
+    host.innerHTML =
+      '<div class="next-appt-banner"><div class="next-appt-card">' +
+        '<div><div class="nab-label">Termini yt i ardhshëm</div>' +
+        '<div class="nab-main">' + escapeHtml(next._doctorName) + ' — ' + parts[0] + ', ' + parts[1] + '</div>' +
+        (next.reason ? '<div class="nab-sub">' + escapeHtml(next.reason) + '</div>' : '') +
+        '</div>' +
+        (mine.length > 1 ? '<div class="nab-sub">+' + (mine.length - 1) + ' termine tjera të rezervuara</div>' : '') +
+      '</div></div>';
+  }
+
   /* ---------------- Patient: booking panel ---------------- */
 
   async function openPanel(doc){
@@ -1988,6 +2225,9 @@ function clearSession(){
   }
 
   async function renderPanel(){
+    // Mbrojtje: mos vazhdo nëse sesioni ka mbaruar ose paneli është mbyllur ndërkohë
+    // (p.sh. përdoruesi mbylli panelin ose doli menjëherë pas konfirmimit të një rezervimi)
+    if(!session || !state.selectedDoctor) return;
     var doc = state.selectedDoctor;
     var panel = document.getElementById('panel');
     var appts = await loadAppointments(doc.id);
@@ -2175,6 +2415,7 @@ function clearSession(){
     await saveDoctors(DOCTORS);
     await renderStaffDashboard();
     await populateAnalysisDoctorSelect();
+    await populateInvoiceDoctorSelect();
     var removed = before - DOCTORS.length;
     if(removed > 0){
       alert('U hoqën ' + removed + ' mjekë të dyfishuar. Tani ka ' + DOCTORS.length + ' mjekë.');
@@ -2184,6 +2425,7 @@ function clearSession(){
   }
 
   async function renderDoctorManageGrid(){
+    await ensureDoctorsDeduped();
     var grid = document.getElementById('doctorManageGrid');
     if(!grid) return;
     if(DOCTORS.length === 0){
@@ -2214,6 +2456,7 @@ function clearSession(){
         try{ await db.delete('appts:' + id); }catch(e){}
         await renderStaffDashboard();
         await populateAnalysisDoctorSelect();
+    await populateInvoiceDoctorSelect();
       };
     });
   }
@@ -2233,7 +2476,10 @@ function clearSession(){
     var bio = document.getElementById('newDocBio').value.trim();
     if(!name || !specialty) return;
 
-    var dup = DOCTORS.some(function(d){ return d.name.trim().toLowerCase() === name.toLowerCase(); });
+    // Rifresko listën para se të shtosh, në rast se një admin tjetër ka shtuar diçka pak më parë
+    await loadDoctors();
+
+    var dup = DOCTORS.some(function(d){ return normName(d.name) === normName(name); });
     if(dup){
       alert('Ekziston tashmë një mjek me këtë emër (' + name + '). Përdor një emër tjetër.');
       return;
@@ -2253,6 +2499,7 @@ function clearSession(){
     closeAddDoctor();
     await renderStaffDashboard();
     await populateAnalysisDoctorSelect();
+    await populateInvoiceDoctorSelect();
   }
 
   /* ---------------- Settings / data modal ---------------- */
@@ -2565,6 +2812,243 @@ function clearSession(){
     renderAllAnalyses();
   }
 
+  /* ---------------- Faturat (Invoices) ---------------- */
+
+  var INVOICE_PRICE_PRESETS = [10, 15, 20, 30, 50, 80];
+
+  async function loadInvoices(){
+    try{
+      var res = await db.get('invoices');
+      return JSON.parse(res.value);
+    }catch(e){ return []; }
+  }
+
+  async function saveInvoices(list){
+    try{ await db.set('invoices', JSON.stringify(list)); }
+    catch(e){ console.error('Ruajtja e faturave dështoi', e); }
+  }
+
+  async function populateInvoiceDoctorSelect(){
+    var sel = document.getElementById('invDoctor');
+    if(!sel) return;
+    sel.innerHTML = '';
+    DOCTORS.forEach(function(d){
+      var opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function setupInvoicePricePresets(){
+    var wrap = document.getElementById('invPricePresets');
+    var amountInput = document.getElementById('invAmount');
+    if(!wrap || !amountInput) return;
+    wrap.innerHTML = '';
+    INVOICE_PRICE_PRESETS.forEach(function(price){
+      var chip = el('button','price-chip', price + ' €');
+      chip.type = 'button';
+      chip.onclick = function(){
+        amountInput.value = price;
+        wrap.querySelectorAll('.price-chip').forEach(function(c){ c.classList.remove('active'); });
+        chip.classList.add('active');
+      };
+      wrap.appendChild(chip);
+    });
+    amountInput.oninput = function(){
+      wrap.querySelectorAll('.price-chip').forEach(function(c){ c.classList.remove('active'); });
+    };
+  }
+
+  function setupInvoicePatientCodePreview(){
+    var input = document.getElementById('invPatientCode');
+    var preview = document.getElementById('invPatientPreview');
+    if(!input) return;
+    input.oninput = async function(){
+      var code = input.value.trim();
+      if(code.length === 4){
+        var p = await lookupPatientByCode(code);
+        preview.textContent = p ? ('✓ ' + p.name) : '✗ Nuk u gjet pacient me këtë kod';
+        preview.style.color = p ? 'var(--sage)' : 'var(--terracotta)';
+      }else{
+        preview.textContent = '';
+      }
+    };
+  }
+
+  async function handleAddInvoice(){
+    var codeInput = document.getElementById('invPatientCode');
+    var code = codeInput ? codeInput.value.trim() : '';
+    var service = document.getElementById('invService').value.trim();
+    var docId = document.getElementById('invDoctor').value;
+    var date = document.getElementById('invDate').value;
+    var amountRaw = document.getElementById('invAmount').value;
+    var amount = parseFloat(amountRaw);
+    var notes = document.getElementById('invNotes').value.trim();
+    var successEl = document.getElementById('invoiceSuccess');
+    var preview = document.getElementById('invPatientPreview');
+
+    var validCode = /^[0-9]{4}$/.test(code);
+    var validAmount = !isNaN(amount) && amount > 0;
+
+    if(!validCode || !service || !validAmount){
+      if(!validCode) codeInput.style.borderColor = 'var(--terracotta)';
+      if(!service) document.getElementById('invService').style.borderColor = 'var(--terracotta)';
+      if(!validAmount) document.getElementById('invAmount').style.borderColor = 'var(--terracotta)';
+      return;
+    }
+
+    var patient = await lookupPatientByCode(code);
+    if(!patient){
+      codeInput.style.borderColor = 'var(--terracotta)';
+      preview.textContent = '✗ Nuk u gjet pacient me këtë kod';
+      preview.style.color = 'var(--terracotta)';
+      return;
+    }
+    codeInput.style.borderColor = '';
+    document.getElementById('invService').style.borderColor = '';
+    document.getElementById('invAmount').style.borderColor = '';
+
+    var doc = DOCTORS.find(function(d){ return d.id === docId; });
+    var all = await loadInvoices();
+    var invoiceNumber = 'F-' + (1000 + all.length + 1);
+    all.push({
+      id: 'inv_' + Date.now().toString(36),
+      number: invoiceNumber,
+      patientName: patient.name,
+      patientCode: patient.code,
+      service: service,
+      doctorName: doc ? doc.name : '—',
+      date: date || new Date().toISOString().slice(0,10),
+      amount: amount,
+      notes: notes,
+      addedAt: new Date().toISOString()
+    });
+    await saveInvoices(all);
+
+    codeInput.value = '';
+    preview.textContent = '';
+    document.getElementById('invService').value = '';
+    document.getElementById('invNotes').value = '';
+    document.getElementById('invAmount').value = '';
+    document.getElementById('invDate').value = '';
+    document.querySelectorAll('#invPricePresets .price-chip').forEach(function(c){ c.classList.remove('active'); });
+    successEl.textContent = 'Fatura ' + invoiceNumber + ' u krijua për ' + patient.name + ' (kodi ' + patient.code + ').';
+    successEl.classList.add('show');
+    setTimeout(function(){ successEl.classList.remove('show'); }, 3500);
+    renderAllInvoices();
+  }
+
+  function invoiceCardHtml(inv, isStaff){
+    return '<div class="invoice-info">' +
+        '<h4>Fatura ' + escapeHtml(inv.number || '') + ' · ' + escapeHtml(inv.service) + '</h4>' +
+        '<div class="inv-meta">' + (isStaff ? 'Pacienti: <strong>' + escapeHtml(inv.patientName) + '</strong> · ' : '') + escapeHtml(inv.doctorName) + ' · ' + (inv.date || '—') + '</div>' +
+        (inv.notes ? '<div class="a-notes">' + escapeHtml(inv.notes) + '</div>' : '') +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:14px;">' +
+        '<div class="invoice-amount">' + Number(inv.amount).toFixed(2) + ' €</div>' +
+        '<div class="invoice-actions">' +
+          '<button class="invoice-print-btn" data-print="' + inv.id + '">Printo</button>' +
+          (isStaff ? '<button class="invoice-remove" data-id="' + inv.id + '">Fshi</button>' : '') +
+        '</div>' +
+      '</div>';
+  }
+
+  async function renderAllInvoices(){
+    var list = document.getElementById('allInvoicesList');
+    if(!list) return;
+    var all = await loadInvoices();
+    if(all.length === 0){
+      list.innerHTML = '<p class="empty-note" style="padding:16px 0;">Nuk ka ende fatura të krijuara.</p>';
+      return;
+    }
+    all.sort(function(a,b){ return b.addedAt.localeCompare(a.addedAt); });
+    list.innerHTML = '';
+    all.forEach(function(inv){
+      var card = el('div','invoice-card', invoiceCardHtml(inv, true));
+      list.appendChild(card);
+    });
+    list.querySelectorAll('[data-print]').forEach(function(btn){
+      btn.onclick = async function(){
+        var id = btn.getAttribute('data-print');
+        var inv = (await loadInvoices()).find(function(i){ return i.id === id; });
+        if(inv) printInvoice(inv);
+      };
+    });
+    list.querySelectorAll('.invoice-remove').forEach(function(btn){
+      btn.onclick = async function(){
+        var id = btn.getAttribute('data-id');
+        var updated = (await loadInvoices()).filter(function(i){ return i.id !== id; });
+        await saveInvoices(updated);
+        renderAllInvoices();
+      };
+    });
+  }
+
+  async function renderPatientInvoices(){
+    var list = document.getElementById('patientInvoicesList');
+    if(!list) return;
+    var all = await loadInvoices();
+    var mine = all.filter(function(inv){
+      if(session.code && inv.patientCode){
+        return inv.patientCode === session.code;
+      }
+      return normName(inv.patientName) === normName(session.name);
+    });
+    if(mine.length === 0){
+      list.innerHTML = '<div class="no-analyses">Nuk ke ende fatura. Faturat e shërbimeve të kryera do të shfaqen këtu.</div>';
+      return;
+    }
+    mine.sort(function(a,b){ return b.addedAt.localeCompare(a.addedAt); });
+    list.innerHTML = '';
+    mine.forEach(function(inv){
+      var card = el('div','invoice-card', invoiceCardHtml(inv, false));
+      list.appendChild(card);
+    });
+    list.querySelectorAll('[data-print]').forEach(function(btn){
+      btn.onclick = function(){ printInvoice(inv_findById(mine, btn.getAttribute('data-print'))); };
+    });
+  }
+
+  function inv_findById(list, id){
+    return list.find(function(i){ return i.id === id; });
+  }
+
+  function printInvoice(inv){
+    if(!inv) return;
+    var area = document.getElementById('printArea');
+    var today = new Date().toLocaleDateString('sq-AL');
+    area.innerHTML =
+      '<div style="font-family:Arial,sans-serif;color:#1F2E2B;max-width:640px;margin:0 auto;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1F2E2B;padding-bottom:14px;margin-bottom:20px;">' +
+          '<div><div style="font-size:22px;font-weight:700;">Klinika Shëndeti</div>' +
+          '<div style="font-size:12.5px;color:#52605C;">Rruga e Shëndetit, Prishtinë · +383 38 000 000</div></div>' +
+          '<div style="text-align:right;"><div style="font-size:18px;font-weight:700;">FATURË</div>' +
+          '<div style="font-size:12.5px;color:#52605C;">Nr. ' + escapeHtml(inv.number||'') + '</div>' +
+          '<div style="font-size:12.5px;color:#52605C;">Data e printimit: ' + today + '</div></div>' +
+        '</div>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">' +
+          '<tr><td style="padding:6px 0;color:#52605C;width:160px;">Pacienti</td><td style="padding:6px 0;font-weight:600;">' + escapeHtml(inv.patientName) + '</td></tr>' +
+          '<tr><td style="padding:6px 0;color:#52605C;">Kodi i pacientit</td><td style="padding:6px 0;">' + escapeHtml(inv.patientCode||'—') + '</td></tr>' +
+          '<tr><td style="padding:6px 0;color:#52605C;">Mjeku</td><td style="padding:6px 0;">' + escapeHtml(inv.doctorName) + '</td></tr>' +
+          '<tr><td style="padding:6px 0;color:#52605C;">Data e shërbimit</td><td style="padding:6px 0;">' + (inv.date||'—') + '</td></tr>' +
+        '</table>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
+          '<thead><tr style="border-bottom:1px solid #DAD3C5;text-align:left;">' +
+            '<th style="padding:8px 0;">Shërbimi</th><th style="padding:8px 0;text-align:right;">Shuma</th>' +
+          '</tr></thead>' +
+          '<tbody><tr style="border-bottom:1px solid #DAD3C5;">' +
+            '<td style="padding:10px 0;">' + escapeHtml(inv.service) + (inv.notes ? '<br><span style="font-size:12px;color:#52605C;">' + escapeHtml(inv.notes) + '</span>' : '') + '</td>' +
+            '<td style="padding:10px 0;text-align:right;">' + Number(inv.amount).toFixed(2) + ' €</td>' +
+          '</tr></tbody>' +
+          '<tfoot><tr><td style="padding:14px 0;text-align:right;font-weight:700;">Totali</td>' +
+          '<td style="padding:14px 0;text-align:right;font-weight:700;font-size:18px;">' + Number(inv.amount).toFixed(2) + ' €</td></tr></tfoot>' +
+        '</table>' +
+        '<div style="margin-top:40px;font-size:12px;color:#52605C;text-align:center;">Faleminderit që zgjodhët Klinikën Shëndeti.</div>' +
+      '</div>';
+    window.print();
+  }
+
   /* ---------------- Patient nav tabs ---------------- */
 
   function initPatientNav(){
@@ -2575,10 +3059,14 @@ function clearSession(){
         var view = tab.getAttribute('data-view');
         document.getElementById('doctorsPane').style.display = view === 'doctors' ? 'block' : 'none';
         document.getElementById('analysesPane').style.display = view === 'analyses' ? 'block' : 'none';
+        document.getElementById('invoicesPane').style.display = view === 'invoices' ? 'block' : 'none';
         if(view === 'analyses'){
           var codeEl = document.getElementById('myCodeValue');
           if(codeEl) codeEl.textContent = session.code || '—';
           renderPatientAnalyses();
+        }
+        if(view === 'invoices'){
+          renderPatientInvoices();
         }
       };
     });
@@ -2614,6 +3102,7 @@ function clearSession(){
   };
 
   document.getElementById('addAnalysisBtn').onclick = handleAddAnalysis;
+  document.getElementById('addInvoiceBtn').onclick = handleAddInvoice;
 
   initPatientNav();
 
