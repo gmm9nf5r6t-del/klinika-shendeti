@@ -371,6 +371,7 @@
     animation:slideIn .22s ease;
   }
   @keyframes slideIn{ from{transform:translateX(24px); opacity:0;} to{transform:translateX(0); opacity:1;} }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
   .panel-close{
     background:none; border:none; cursor:pointer;
     color:var(--ink-soft); font-size:14px;
@@ -1331,6 +1332,11 @@
 <!-- APP SHELL -->
 <div class="app" id="app">
 
+  <div id="appLoadingOverlay" style="display:none;position:fixed;inset:0;background:var(--paper);z-index:80;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+    <div style="width:34px;height:34px;border:3px solid var(--sage-light);border-top-color:var(--sage);border-radius:50%;animation:spin .7s linear infinite;"></div>
+    <div style="font-size:13.5px;color:var(--ink-soft);">Duke ngarkuar...</div>
+  </div>
+
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -1403,6 +1409,7 @@
       <div class="ledger-strip">
         <h2 style="font-size:24px;font-weight:500;margin:0 0 8px;">Zgjedh mjekun dhe rezervo</h2>
         <p>Kliko mbi profilin e mjekut për të parë terminet e lira dhe për të caktuar takimin tënd.</p>
+        <input type="text" id="doctorSearchInput" placeholder="Kërko mjek me emër ose specialitet..." style="width:100%;border:1px solid var(--line);background:#fff;border-radius:6px;padding:11px 14px;font-size:14px;color:var(--ink);margin-bottom:14px;" />
         <div class="filter-row" id="filterRow"></div>
       </div>
       <div class="directory" id="directory"></div>
@@ -1607,7 +1614,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection
+  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1832,6 +1839,7 @@ function clearSession(){
 
   var state = { selectedDoctor:null, selectedSlot:null };
   var currentFilter = null;
+  var currentSearchTerm = '';
 
   function el(tag, cls, html){
     var e = document.createElement(tag);
@@ -2031,8 +2039,13 @@ function clearSession(){
     var app = document.getElementById('app');
     app.classList.add('show');
 
+    var loadingOverlay = document.getElementById('appLoadingOverlay');
+    if(loadingOverlay) loadingOverlay.style.display = 'flex';
+
     saveSession(session);
     await loadDoctors();
+
+    if(loadingOverlay) loadingOverlay.style.display = 'none';
 
     document.getElementById('sessionName').textContent = session.name;
     var badge = document.getElementById('sessionBadge');
@@ -2158,6 +2171,16 @@ function clearSession(){
     var dir = document.getElementById('directory');
     dir.innerHTML = '';
     var list = currentFilter ? DOCTORS.filter(function(d){ return d.specialty === currentFilter; }) : DOCTORS;
+    if(currentSearchTerm){
+      var term = currentSearchTerm.toLowerCase();
+      list = list.filter(function(d){
+        return d.name.toLowerCase().indexOf(term) !== -1 || d.specialty.toLowerCase().indexOf(term) !== -1;
+      });
+    }
+    if(list.length === 0){
+      dir.innerHTML = '<p class="empty-note" style="padding:20px 4px;">Nuk u gjet asnjë mjek që përputhet me kërkimin.</p>';
+      return;
+    }
     for(var i=0;i<list.length;i++){
       var d = list[i];
       var appts = await loadAppointments(d.id);
@@ -2313,16 +2336,44 @@ function clearSession(){
     btn.disabled = true;
     btn.textContent = 'Duke ruajtur…';
 
-    var doc = state.selectedDoctor;
-    var appts = await loadAppointments(doc.id);
-    appts.push({
-      slotKey: state.selectedSlot,
-      patientName: session.name,
-      patientCode: session.code || '—',
-      reason: reason,
-      bookedAt: new Date().toISOString()
-    });
-    await saveAppointments(doc.id, appts);
+    var selectedDoc = state.selectedDoctor;
+    var slotKeyToBook = state.selectedSlot;
+    var docRef = doc(firestore, 'klinika_data', 'appts:' + selectedDoc.id);
+
+    try{
+      await runTransaction(firestore, async function(tx){
+        var snap = await tx.get(docRef);
+        var appts = snap.exists() ? JSON.parse(snap.data().value) : [];
+
+        // Re-check INSIDE the transaction against fresh data, not the
+        // copy that was rendered on screen a moment ago. This closes the
+        // window where two patients could both book the same slot.
+        var alreadyTaken = appts.some(function(a){ return a.slotKey === slotKeyToBook; });
+        if(alreadyTaken){
+          throw new Error('SLOT_TAKEN');
+        }
+
+        appts.push({
+          slotKey: slotKeyToBook,
+          patientName: session.name,
+          patientCode: session.code || '—',
+          reason: reason,
+          bookedAt: new Date().toISOString()
+        });
+        tx.set(docRef, { value: JSON.stringify(appts) });
+      });
+    }catch(err){
+      if(err.message === 'SLOT_TAKEN'){
+        alert('Ky termin sapo u zu nga dikush tjetër. Zgjedh një tjetër.');
+      }else{
+        alert('Diçka shkoi keq, provo prapë.');
+        console.error(err);
+      }
+      btn.disabled = false;
+      btn.textContent = 'Konfirmo terminin';
+      await renderPanel();
+      return;
+    }
 
     document.getElementById('successNote').classList.add('show');
     btn.textContent = 'Konfirmuar ✓';
@@ -2335,6 +2386,9 @@ function clearSession(){
   }
 
   async function cancelAppointment(key){
+    var parts = key.split('|');
+    var ok = confirm('A je i sigurt që do ta anulosh terminin e ' + parts[0] + ' në ' + parts[1] + '?');
+    if(!ok) return;
     var doc = state.selectedDoctor;
     var appts = await loadAppointments(doc.id);
     appts = appts.filter(function(a){ return !(a.slotKey === key && a.patientName === session.name); });
@@ -2477,15 +2531,7 @@ function clearSession(){
     var bio = document.getElementById('newDocBio').value.trim();
     if(!name || !specialty) return;
 
-    // Rifresko listën para se të shtosh, në rast se një admin tjetër ka shtuar diçka pak më parë
-    await loadDoctors();
-
-    var dup = DOCTORS.some(function(d){ return normName(d.name) === normName(name); });
-    if(dup){
-      alert('Ekziston tashmë një mjek me këtë emër (' + name + '). Përdor një emër tjetër.');
-      return;
-    }
-
+    var docRef = doc(firestore, 'klinika_data', 'doctors');
     var color = DOCTOR_COLORS[DOCTORS.length % DOCTOR_COLORS.length];
     var newDoc = {
       id: makeDoctorId(),
@@ -2495,8 +2541,31 @@ function clearSession(){
       color: color,
       bio: bio || 'Mjek/e e klinikës.'
     };
-    DOCTORS.push(newDoc);
-    await saveDoctors(DOCTORS);
+
+    try{
+      await runTransaction(firestore, async function(tx){
+        var snap = await tx.get(docRef);
+        var list = snap.exists() ? JSON.parse(snap.data().value) : [];
+
+        // Re-check INSIDE the transaction against fresh data, closing the
+        // window where two staff could both add the same doctor at once.
+        var dup = list.some(function(d){ return normName(d.name) === normName(name); });
+        if(dup) throw new Error('DUP_DOCTOR');
+
+        list.push(newDoc);
+        tx.set(docRef, { value: JSON.stringify(list) });
+      });
+    }catch(err){
+      if(err.message === 'DUP_DOCTOR'){
+        alert('Ekziston tashmë një mjek me këtë emër (' + name + '). Përdor një emër tjetër.');
+      }else{
+        alert('Diçka shkoi keq, provo prapë.');
+        console.error(err);
+      }
+      return;
+    }
+
+    await loadDoctors();
     closeAddDoctor();
     await renderStaffDashboard();
     await populateAnalysisDoctorSelect();
@@ -3104,6 +3173,16 @@ function clearSession(){
 
   document.getElementById('addAnalysisBtn').onclick = handleAddAnalysis;
   document.getElementById('addInvoiceBtn').onclick = handleAddInvoice;
+
+  var searchDebounceTimer = null;
+  document.getElementById('doctorSearchInput').oninput = function(e){
+    var val = e.target.value;
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(function(){
+      currentSearchTerm = val.trim();
+      renderDirectory();
+    }, 200);
+  };
 
   initPatientNav();
 
