@@ -598,6 +598,35 @@
     font-size:14px;
   }
 
+  /* ---------- Analyses health-check box ---------- */
+  .health-box{
+    border-radius:6px;
+    padding:14px 16px;
+    margin:0 0 18px;
+    font-size:13.5px;
+    line-height:1.55;
+  }
+  .health-box.ok{
+    background:#EAF1EC;
+    border:1px solid #BFD7C8;
+    color:#2F5443;
+  }
+  .health-box.warn{
+    background:#FBEAE3;
+    border:1px solid #E8C3AE;
+    color:#9C4A28;
+  }
+  .health-box h5{
+    margin:0 0 8px;
+    font-size:13.5px;
+    font-weight:600;
+  }
+  .health-box ul{
+    margin:6px 0 0;
+    padding-left:18px;
+  }
+  .health-box li{ margin-bottom:4px; }
+
   /* ---------- Hero with illustration ---------- */
   .hero{
     max-width:1080px;
@@ -1461,7 +1490,11 @@
       <div class="admin-section">
         <div class="admin-section-head">
           <h3>Analizat e pacientëve</h3>
+          <div>
+            <button class="export-btn" id="checkAnalysesBtn" type="button">Kontrollo analizat</button>
+          </div>
         </div>
+        <div id="analysesHealthBox" style="display:none;"></div>
         <div class="add-analysis-wrap">
           <h4>Shto analizë të re</h4>
           <div class="analysis-form-grid">
@@ -1614,7 +1647,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, runTransaction
+  getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, onSnapshot, collection, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1651,6 +1684,48 @@ var db = {
     return { key: key, deleted: true, shared: true };
   }
 };
+
+/* ---------------------------------------------------------------
+   transactionalUpdate: lexo + ndrysho + ruaj NJE listë (p.sh.
+   "analyses", "invoices", "patients", "appts:xyz") brenda një
+   transaksioni Firestore, kështu që dy shkrime njëkohësisht
+   (p.sh. dy anëtarë të personelit që shtojnë analiza në të
+   njëjtën sekondë) nuk humbasin njëri-tjetrin ("lost update").
+   `updater(currentList)` kthen listën e re; mund të hedhë një
+   Error për të anuluar shkrimin (p.sh. kod pacienti i zënë).
+   Kthen listën e re pas suksesit.
+--------------------------------------------------------------- */
+async function transactionalUpdate(key, updater){
+  var docRef = doc(firestore, COLLECTION_NAME, key);
+  return await runTransaction(firestore, async function(tx){
+    var snap = await tx.get(docRef);
+    var current = snap.exists() ? JSON.parse(snap.data().value) : [];
+    var result = updater(current);
+    tx.set(docRef, { value: JSON.stringify(result) });
+    return result;
+  });
+}
+
+/* ---------------------------------------------------------------
+   verifyWrite: rilexon menjëherë (direkt nga serveri, duke
+   anashkaluar çdo cache) pas një shkrimi kritik (p.sh. shtimi i
+   një analize) për të konfirmuar që vërtet u ruajt. Përdoret nga
+   "Kontrollo analizat" dhe nga handleAddAnalysis si siguri shtesë.
+--------------------------------------------------------------- */
+async function verifyWrite(key, predicate){
+  try{
+    // getDocFromServer (jo getDoc i rregullt) kalon direkt te serveri,
+    // duke anashkaluar cache-in lokal — kështu vërtet konfirmojmë çfarë
+    // ka Firestore-i, jo çfarë mban mend shfletuesi.
+    var snap = await getDocFromServer(doc(firestore, COLLECTION_NAME, key));
+    if(!snap.exists()) return false;
+    var list = JSON.parse(snap.data().value);
+    return predicate(list);
+  }catch(e){
+    console.error('verifyWrite gabim:', e);
+    return false;
+  }
+}
 
 /* ---------------------------------------------------------------
    Real-time listener: thirret kur ndodh çdo ndryshim në Firestore
@@ -1882,13 +1957,17 @@ function clearSession(){
   }
 
   async function loadAllAppointments(){
+    // E lexonim një mjek në kohë (await brenda një for-loop), kështu që me
+    // 9 mjekë prisnim 9 shkuarje-ardhje rrjeti njëra pas tjetrës — kjo ishte
+    // shkaku kryesor i "lag"-ut kur hapej paneli i personelit. Tani i lexojmë
+    // të gjithë mjekët njëkohësisht me Promise.all.
+    var lists = await Promise.all(DOCTORS.map(function(d){ return loadAppointments(d.id); }));
     var all = [];
-    for(var i=0;i<DOCTORS.length;i++){
-      var d = DOCTORS[i];
-      var list = await loadAppointments(d.id);
+    DOCTORS.forEach(function(d, i){
+      var list = lists[i];
       list.forEach(function(a){ a._doctorId = d.id; a._doctorName = d.name; });
       all = all.concat(list);
-    }
+    });
     return all;
   }
 
@@ -1972,21 +2051,36 @@ function clearSession(){
       return;
     }
 
-    var patients = await getPatients();
-    var existing = patients.find(function(p){ return p.name.toLowerCase() === name.toLowerCase(); });
-
     if(authIsSignup){
-      if(existing){
-        showAuthError('Ky emër ekziston tashmë. Provo të hysh në vend se të krijosh llogari të re.');
+      // E gjithë kontrolli "a ekziston emri" + "cakto kod" bëhet TASH brenda
+      // vetë transaksionit, mbi të dhënat e freskëta nga serveri — jo mbi
+      // kopjen e lexuar një moment më parë. Kjo mbyll vrimën ku dy pacientë
+      // që regjistrohen në të njëjtën sekondë mund ta fshinin njëri-tjetrin
+      // (humbje e llogarisë, bug real me të dhëna reale pacientësh).
+      var newCode = null;
+      try{
+        await transactionalUpdate('patients', function(patients){
+          var dup = patients.some(function(p){ return p.name.toLowerCase() === name.toLowerCase(); });
+          if(dup) throw new Error('NAME_TAKEN');
+          newCode = generateUniquePatientCode(patients);
+          patients.push({ name:name, password:pass, code:newCode });
+          return patients;
+        });
+      }catch(err){
+        if(err.message === 'NAME_TAKEN'){
+          showAuthError('Ky emër ekziston tashmë. Provo të hysh në vend se të krijosh llogari të re.');
+        }else{
+          showAuthError('Diçka shkoi keq, provo prapë.');
+          console.error(err);
+        }
         return;
       }
-      var newCode = generateUniquePatientCode(patients);
-      patients.push({ name:name, password:pass, code:newCode });
-      await savePatients(patients);
       session = { role:'patient', name:name, code:newCode };
       await logLogin(session.name, 'patient');
       enterApp();
     }else{
+      var patients = await getPatients();
+      var existing = patients.find(function(p){ return p.name.toLowerCase() === name.toLowerCase(); });
       if(!existing){
         showAuthError('Nuk u gjet llogari me këtë emër. Krijo një llogari të re.');
         return;
@@ -1995,11 +2089,20 @@ function clearSession(){
         showAuthError('Fjalëkalimi është i pasaktë.');
         return;
       }
-      if(!existing.code){
-        existing.code = generateUniquePatientCode(patients);
-        await savePatients(patients);
+      var patientCode = existing.code;
+      if(!patientCode){
+        try{
+          patientCode = await transactionalUpdate('patients', function(list){
+            var p = list.find(function(x){ return x.name.toLowerCase() === name.toLowerCase(); });
+            if(p && !p.code) p.code = generateUniquePatientCode(list);
+            return list;
+          }).then(function(list){
+            var p = list.find(function(x){ return x.name.toLowerCase() === name.toLowerCase(); });
+            return p ? p.code : null;
+          });
+        }catch(err){ console.error(err); }
       }
-      session = { role:'patient', name:name, code:existing.code };
+      session = { role:'patient', name:name, code:patientCode };
       await logLogin(session.name, 'patient');
       enterApp();
     }
@@ -2389,10 +2492,15 @@ function clearSession(){
     var parts = key.split('|');
     var ok = confirm('A je i sigurt që do ta anulosh terminin e ' + parts[0] + ' në ' + parts[1] + '?');
     if(!ok) return;
-    var doc = state.selectedDoctor;
-    var appts = await loadAppointments(doc.id);
-    appts = appts.filter(function(a){ return !(a.slotKey === key && a.patientName === session.name); });
-    await saveAppointments(doc.id, appts);
+    var docObj = state.selectedDoctor;
+    try{
+      await transactionalUpdate('appts:' + docObj.id, function(appts){
+        return appts.filter(function(a){ return !(a.slotKey === key && a.patientName === session.name); });
+      });
+    }catch(err){
+      alert('Diçka shkoi keq, provo prapë.');
+      console.error(err);
+    }
     await renderPanel();
     renderDirectory();
   }
@@ -2447,9 +2555,14 @@ function clearSession(){
         var doctorId = btn.getAttribute('data-doctor');
         var key = btn.getAttribute('data-key');
         var patient = btn.getAttribute('data-patient');
-        var list = await loadAppointments(doctorId);
-        list = list.filter(function(a){ return !(a.slotKey === key && a.patientName === patient); });
-        await saveAppointments(doctorId, list);
+        try{
+          await transactionalUpdate('appts:' + doctorId, function(list){
+            return list.filter(function(a){ return !(a.slotKey === key && a.patientName === patient); });
+          });
+        }catch(err){
+          alert('Diçka shkoi keq, provo prapë.');
+          console.error(err);
+        }
         renderStaffDashboard();
       };
     });
@@ -2791,11 +2904,80 @@ function clearSession(){
     list.querySelectorAll('.analysis-remove').forEach(function(btn){
       btn.onclick = async function(){
         var id = btn.getAttribute('data-id');
-        var updated = (await loadAnalyses()).filter(function(a){ return a.id !== id; });
-        await saveAnalyses(updated);
+        try{
+          await transactionalUpdate('analyses', function(all){
+            return all.filter(function(a){ return a.id !== id; });
+          });
+        }catch(err){
+          alert('Fshirja dështoi, provo prapë.');
+          console.error(err);
+        }
         renderAllAnalyses();
       };
     });
+  }
+
+  /* ---------------------------------------------------------------
+     Kontrollo analizat: lexon "analyses" dhe "patients" DIREKT nga
+     serveri (jo cache), dhe kontrollon që çdo analizë:
+       1) ka të gjitha fushat e nevojshme,
+       2) ka një kod pacienti (4 shifra) që ekziston vërtet te "patients",
+       3) emri i ruajtur te analiza përputhet me emrin aktual te ai kod
+          (kap rastin kur emri i pacientit është ndryshuar më vonë).
+     Kështu e di me siguri nëse analizat po "ikin mirë" te pacientët, në
+     vend që thjesht të besojmë ekranin.
+  --------------------------------------------------------------- */
+  async function runAnalysesHealthCheck(){
+    var btn = document.getElementById('checkAnalysesBtn');
+    var box = document.getElementById('analysesHealthBox');
+    if(btn){ btn.disabled = true; btn.textContent = 'Duke kontrolluar…'; }
+
+    try{
+      var analysesSnap = await getDocFromServer(doc(firestore, COLLECTION_NAME, 'analyses'));
+      var patientsSnap = await getDocFromServer(doc(firestore, COLLECTION_NAME, 'patients'));
+      var analyses = analysesSnap.exists() ? JSON.parse(analysesSnap.data().value) : [];
+      var patients = patientsSnap.exists() ? JSON.parse(patientsSnap.data().value) : [];
+
+      var byCode = {};
+      patients.forEach(function(p){ if(p.code) byCode[p.code] = p; });
+
+      var issues = [];
+      var seenIds = {};
+      analyses.forEach(function(a, i){
+        var label = (a.type || 'Analizë pa lloj') + ' (' + (a.patientName || 'pa emër') + ')';
+        if(!a.id || seenIds[a.id]){
+          issues.push('Rresht ' + (i+1) + ' — ' + label + ': ID mungon ose është dyfishuar.');
+        }
+        if(a.id) seenIds[a.id] = true;
+        if(!a.patientCode || !/^[0-9]{4}$/.test(a.patientCode)){
+          issues.push(label + ': nuk ka kod pacienti të vlefshëm, nuk do t\'i shfaqet askujt.');
+        }else if(!byCode[a.patientCode]){
+          issues.push(label + ': kodi ' + a.patientCode + ' nuk përputhet me asnjë pacient të regjistruar aktualisht — analiza është "e varur" dhe pacienti s\'e sheh dot.');
+        }else if(byCode[a.patientCode].name.trim().toLowerCase() !== (a.patientName||'').trim().toLowerCase()){
+          issues.push(label + ': emri i ruajtur nuk përputhet më me emrin aktual të pacientit me kod ' + a.patientCode + ' (' + byCode[a.patientCode].name + ').');
+        }
+        if(!a.type) issues.push(label + ': i mungon lloji i analizës.');
+      });
+
+      var html;
+      if(issues.length === 0){
+        html = '<div class="health-box ok"><h5>✓ Gjithçka në rregull</h5>' +
+          analyses.length + ' analiza gjithsej, të gjitha lidhen saktë me nga një pacient të regjistruar. ' +
+          'Verifikuar direkt nga serveri tani (' + new Date().toLocaleTimeString('sq-AL') + ').</div>';
+      }else{
+        html = '<div class="health-box warn"><h5>⚠ U gjetën ' + issues.length + ' probleme</h5><ul>' +
+          issues.slice(0, 30).map(function(m){ return '<li>' + escapeHtml(m) + '</li>'; }).join('') +
+          '</ul>' + (issues.length > 30 ? '<div style="margin-top:6px;">… dhe ' + (issues.length-30) + ' të tjera.</div>' : '') + '</div>';
+      }
+      box.innerHTML = html;
+      box.style.display = 'block';
+    }catch(err){
+      box.innerHTML = '<div class="health-box warn"><h5>Kontrolli dështoi</h5>Nuk u arrit të lexohen të dhënat nga serveri. Provo prapë. (' + escapeHtml(String(err.message||err)) + ')</div>';
+      box.style.display = 'block';
+      console.error(err);
+    }
+
+    if(btn){ btn.disabled = false; btn.textContent = 'Kontrollo analizat'; }
   }
 
   async function populateAnalysisDoctorSelect(){
@@ -2858,25 +3040,54 @@ function clearSession(){
     document.getElementById('anType').style.borderColor = '';
 
     var doc = DOCTORS.find(function(d){ return d.id === docId; });
-    var all = await loadAnalyses();
-    all.push({
-      id: 'an_' + Date.now().toString(36),
-      patientName: patient.name,
-      patientCode: patient.code,
-      type: type,
-      doctorName: doc ? doc.name : '—',
-      date: date,
-      notes: notes,
-      addedAt: new Date().toISOString()
-    });
-    await saveAnalyses(all);
+    var newId = 'an_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    var submitBtn = document.getElementById('addAnalysisBtn');
+    if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Duke dërguar…'; }
 
+    try{
+      // Shkrim atomik: lexo listën e freskët dhe shto brenda një
+      // transaksioni, që dy shtimе njëkohësisht (p.sh. dy mjekë që shtojnë
+      // analiza në të njëjtën sekondë) të mos e fshijnë njëri-tjetrin.
+      await transactionalUpdate('analyses', function(all){
+        all.push({
+          id: newId,
+          patientName: patient.name,
+          patientCode: patient.code,
+          type: type,
+          doctorName: doc ? doc.name : '—',
+          date: date,
+          notes: notes,
+          addedAt: new Date().toISOString()
+        });
+        return all;
+      });
+
+      // Verifikim: rilexo direkt nga serveri dhe konfirmo që analiza
+      // vërtet u ruajt — në vend që thjesht të besojmë se shkrimi kaloi.
+      var confirmed = await verifyWrite('analyses', function(all){
+        return all.some(function(a){ return a.id === newId; });
+      });
+      if(!confirmed){
+        throw new Error('VERIFY_FAILED');
+      }
+    }catch(err){
+      if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Shto analizën'; }
+      successEl.textContent = '';
+      successEl.classList.remove('show');
+      alert(err.message === 'VERIFY_FAILED'
+        ? 'Analiza u dërgua, por verifikimi dështoi — rifresko faqen dhe kontrollo nëse u ruajt. Provo ta shtosh prapë nëse mungon.'
+        : 'Dërgimi i analizës dështoi, provo prapë.');
+      console.error(err);
+      return;
+    }
+
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Shto analizën'; }
     codeInput.value = '';
     preview.textContent = '';
     document.getElementById('anType').value = '';
     document.getElementById('anNotes').value = '';
     document.getElementById('anDate').value = '';
-    successEl.textContent = 'Analiza u dërgua me sukses te ' + patient.name + ' (kodi ' + patient.code + ').';
+    successEl.textContent = '✓ Analiza u dërgua dhe u verifikua te ' + patient.name + ' (kodi ' + patient.code + ').';
     successEl.classList.add('show');
     setTimeout(function(){ successEl.classList.remove('show'); }, 3500);
     renderAllAnalyses();
@@ -2980,21 +3191,29 @@ function clearSession(){
     document.getElementById('invAmount').style.borderColor = '';
 
     var doc = DOCTORS.find(function(d){ return d.id === docId; });
-    var all = await loadInvoices();
-    var invoiceNumber = 'F-' + (1000 + all.length + 1);
-    all.push({
-      id: 'inv_' + Date.now().toString(36),
-      number: invoiceNumber,
-      patientName: patient.name,
-      patientCode: patient.code,
-      service: service,
-      doctorName: doc ? doc.name : '—',
-      date: date || new Date().toISOString().slice(0,10),
-      amount: amount,
-      notes: notes,
-      addedAt: new Date().toISOString()
-    });
-    await saveInvoices(all);
+    var invoiceNumber = null;
+    try{
+      await transactionalUpdate('invoices', function(all){
+        invoiceNumber = 'F-' + (1000 + all.length + 1);
+        all.push({
+          id: 'inv_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+          number: invoiceNumber,
+          patientName: patient.name,
+          patientCode: patient.code,
+          service: service,
+          doctorName: doc ? doc.name : '—',
+          date: date || new Date().toISOString().slice(0,10),
+          amount: amount,
+          notes: notes,
+          addedAt: new Date().toISOString()
+        });
+        return all;
+      });
+    }catch(err){
+      alert('Krijimi i faturës dështoi, provo prapë.');
+      console.error(err);
+      return;
+    }
 
     codeInput.value = '';
     preview.textContent = '';
@@ -3048,8 +3267,14 @@ function clearSession(){
     list.querySelectorAll('.invoice-remove').forEach(function(btn){
       btn.onclick = async function(){
         var id = btn.getAttribute('data-id');
-        var updated = (await loadInvoices()).filter(function(i){ return i.id !== id; });
-        await saveInvoices(updated);
+        try{
+          await transactionalUpdate('invoices', function(all){
+            return all.filter(function(i){ return i.id !== id; });
+          });
+        }catch(err){
+          alert('Fshirja dështoi, provo prapë.');
+          console.error(err);
+        }
         renderAllInvoices();
       };
     });
@@ -3173,6 +3398,7 @@ function clearSession(){
 
   document.getElementById('addAnalysisBtn').onclick = handleAddAnalysis;
   document.getElementById('addInvoiceBtn').onclick = handleAddInvoice;
+  document.getElementById('checkAnalysesBtn').onclick = runAnalysesHealthCheck;
 
   var searchDebounceTimer = null;
   document.getElementById('doctorSearchInput').oninput = function(e){
