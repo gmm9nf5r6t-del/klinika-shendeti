@@ -1121,6 +1121,46 @@
     flex-shrink:0;
     text-align:right;
   }
+  .analysis-photo{
+    display:block;
+    max-width:220px;
+    max-height:160px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    margin-top:8px;
+    cursor:zoom-in;
+    object-fit:cover;
+  }
+  .eval-badge{
+    display:inline-block;
+    font-size:12.5px;
+    font-weight:500;
+    padding:5px 10px;
+    border-radius:999px;
+    margin-top:8px;
+  }
+  .eval-badge.eval-ok{ background:#EAF1EC; color:#2F5443; }
+  .eval-badge.eval-warn{ background:#FBEAE3; color:#9C4A28; }
+  .eval-disclaimer{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:4px;
+    font-style:italic;
+  }
+  .photo-lightbox{
+    position:fixed; inset:0; z-index:80;
+    background:rgba(20,20,20,0.82);
+    display:none;
+    align-items:center; justify-content:center;
+    padding:24px;
+    cursor:zoom-out;
+  }
+  .photo-lightbox.open{ display:flex; }
+  .photo-lightbox img{
+    max-width:100%; max-height:100%;
+    border-radius:6px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.4);
+  }
   .no-analyses{
     text-align:center;
     padding:40px 20px;
@@ -1515,9 +1555,27 @@
               <label for="anDate">Data</label>
               <input type="date" id="anDate" />
             </div>
+            <div>
+              <label for="anTestKey">Testi (për kontroll automatik, opsionale)</label>
+              <select id="anTestKey">
+                <option value="">— Jo numerike / tjetër —</option>
+              </select>
+            </div>
+            <div>
+              <label for="anValue">Vlera e matur (nëse testi është më sipër)</label>
+              <input type="number" step="any" id="anValue" placeholder="p.sh. 94" />
+            </div>
             <div class="full">
               <label for="anNotes">Rezultati / Shënime</label>
               <textarea id="anNotes" placeholder="Shkruaj rezultatin ose shënime nga analiza..."></textarea>
+            </div>
+            <div class="full">
+              <label for="anPhoto">Fotografi e fletë-analizës (opsionale)</label>
+              <input type="file" id="anPhoto" accept="image/*" capture="environment" />
+              <div id="anPhotoPreviewWrap" style="margin-top:8px;display:none;">
+                <img id="anPhotoPreview" style="max-width:180px;max-height:140px;border-radius:6px;border:1px solid var(--line);display:block;" />
+                <button type="button" id="anPhotoRemoveBtn" class="export-btn" style="margin-top:6px;">Hiq fotografinë</button>
+              </div>
             </div>
           </div>
           <button class="analysis-submit" id="addAnalysisBtn">Shto analizën</button>
@@ -1605,6 +1663,8 @@
 
 <div id="printArea"></div>
 
+<div class="photo-lightbox" id="photoLightbox"><img id="photoLightboxImg" src="" alt="Fotografi e analizës" /></div>
+
 <div class="settings-overlay" id="settingsOverlay">
   <div class="settings-modal">
     <div class="settings-head">
@@ -1649,6 +1709,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/fireba
 import {
   getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, onSnapshot, collection, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB7TVfP_v2NkT384cj3xWSZkH5N-ThZ84w",
@@ -1661,7 +1725,42 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 const firestore = getFirestore(fbApp);
+const storage = getStorage(fbApp);
 const COLLECTION_NAME = "klinika_data";
+
+/* ---------------------------------------------------------------
+   Hyrje anonime: identifikon çdo vizitor te Firebase (automatike,
+   pa formular) PARA se faqja të prekë Firestore ose Storage. Kjo i
+   jep rregullave të sigurisë diçka reale për t'u kontrolluar
+   (request.auth != null), në vend që baza/fotot të mbeten të hapura
+   për këdo. Çdo funksion që prek Firebase-in pret "authReady" më parë.
+--------------------------------------------------------------- */
+const auth = getAuth(fbApp);
+const authReady = signInAnonymously(auth).catch(function(err){
+  console.error('Hyrja anonime te Firebase dështoi:', err);
+});
+
+/* ---------------------------------------------------------------
+   Ngarkimi i fotove (p.sh. fotografia e një fletë-analize) shkon te
+   Firebase Storage, jo te Firestore — Firestore ka limit 1MB për
+   dokument dhe gjithë analizat tona jetojnë në NJË dokument të
+   përbashkët, kështu që një foto e ruajtur direkt aty do ta mbushte
+   shpejt dhe do ta ngadalësonte krejt faqen. Në Storage, ruajmë
+   vetëm imazhin dhe në Firestore mbajmë një URL të shkurtër drejt tij.
+--------------------------------------------------------------- */
+async function uploadAnalysisPhoto(file, analysisId){
+  await authReady;
+  var path = 'analizat/' + analysisId + '_' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.\-_]/g,'_');
+  var fileRef = storageRef(storage, path);
+  await uploadBytes(fileRef, file);
+  var url = await getDownloadURL(fileRef);
+  return { url: url, path: path };
+}
+async function deleteAnalysisPhoto(path){
+  if(!path) return;
+  try{ await authReady; await deleteObject(storageRef(storage, path)); }
+  catch(e){ console.warn('Fshirja e fotos dështoi (mund të jetë fshirë tashmë):', e); }
+}
 
 /* ---------------------------------------------------------------
    db adapter: mimics the previous window.storage.get/set/delete API
@@ -1670,16 +1769,19 @@ const COLLECTION_NAME = "klinika_data";
 --------------------------------------------------------------- */
 var db = {
   async get(key){
+    await authReady;
     var snap = await getDoc(doc(firestore, COLLECTION_NAME, key));
     if(!snap.exists()) throw new Error('Kyçi nuk ekziston: ' + key);
     var data = snap.data();
     return { key: key, value: data.value, shared: true };
   },
   async set(key, value){
+    await authReady;
     await setDoc(doc(firestore, COLLECTION_NAME, key), { value: value });
     return { key: key, value: value, shared: true };
   },
   async delete(key){
+    await authReady;
     await deleteDoc(doc(firestore, COLLECTION_NAME, key));
     return { key: key, deleted: true, shared: true };
   }
@@ -1696,6 +1798,7 @@ var db = {
    Kthen listën e re pas suksesit.
 --------------------------------------------------------------- */
 async function transactionalUpdate(key, updater){
+  await authReady;
   var docRef = doc(firestore, COLLECTION_NAME, key);
   return await runTransaction(firestore, async function(tx){
     var snap = await tx.get(docRef);
@@ -1714,6 +1817,7 @@ async function transactionalUpdate(key, updater){
 --------------------------------------------------------------- */
 async function verifyWrite(key, predicate){
   try{
+    await authReady;
     // getDocFromServer (jo getDoc i rregullt) kalon direkt te serveri,
     // duke anashkaluar cache-in lokal — kështu vërtet konfirmojmë çfarë
     // ka Firestore-i, jo çfarë mban mend shfletuesi.
@@ -2831,6 +2935,42 @@ function clearSession(){
 
   /* ---------------- Analyses ---------------- */
 
+  /* ---------------------------------------------------------------
+     Intervalet normale (referencë e përgjithshme, për të rritur).
+     KUJDES: kjo ËSHTË VETËM një kontroll automatik me rregulla fikse,
+     JO diagnozë apo këshillë mjekësore — intervalet reale ndryshojnë
+     sipas moshës, gjinisë dhe laboratorit. Shërben si sinjal i
+     shpejtë ("duket jashtë normales, pyet mjekun"), jo si verdikt.
+  --------------------------------------------------------------- */
+  var REFERENCE_RANGES = {
+    glukoza:      { label:'Glukoza (gjak, esëll)', unit:'mg/dL', min:70,  max:99  },
+    hemoglobina:  { label:'Hemoglobina',            unit:'g/dL',  min:12,  max:17.5 },
+    kolesteroli:  { label:'Kolesteroli total',      unit:'mg/dL', min:0,   max:199 },
+    trigliceridet:{ label:'Trigliceridet',          unit:'mg/dL', min:0,   max:149 },
+    leukocitet:   { label:'Leukocitet (WBC)',       unit:'x10⁹/L',min:4,   max:11  },
+    trombocitet:  { label:'Trombocitet (Platelets)',unit:'x10⁹/L',min:150, max:400 },
+    kreatinina:   { label:'Kreatinina',             unit:'mg/dL', min:0.6, max:1.3 },
+    urea:         { label:'Urea',                   unit:'mg/dL', min:7,   max:20  },
+    tsh:          { label:'TSH',                    unit:'mIU/L', min:0.4, max:4.0 }
+  };
+
+  // Kthen {status:'ok'|'high'|'low', text} ose null nëse nuk ka test/vlerë të njohur
+  function evaluateAnalysisValue(testKey, value){
+    var ref = REFERENCE_RANGES[testKey];
+    if(!ref || value === null || value === undefined || value === '' || isNaN(value)) return null;
+    value = Number(value);
+    if(value < ref.min) return { status:'low', text:'Nën normën (' + ref.min + '–' + ref.max + ' ' + ref.unit + ')' };
+    if(value > ref.max) return { status:'high', text:'Mbi normën (' + ref.min + '–' + ref.max + ' ' + ref.unit + ')' };
+    return { status:'ok', text:'Brenda kufijve normalë (' + ref.min + '–' + ref.max + ' ' + ref.unit + ')' };
+  }
+
+  function evaluationBadgeHtml(evaluation){
+    if(!evaluation) return '';
+    var cls = evaluation.status === 'ok' ? 'eval-ok' : 'eval-warn';
+    var icon = evaluation.status === 'ok' ? '✓' : '⚠';
+    return '<div class="eval-badge ' + cls + '">' + icon + ' ' + escapeHtml(evaluation.text) + '</div>';
+  }
+
   async function loadAnalyses(){
     try{
       var res = await db.get('analyses');
@@ -2862,6 +3002,7 @@ function clearSession(){
     mine.forEach(function(a){
       var card = el('div','analysis-card');
       var dateStr = a.date || '—';
+      var evaluation = evaluateAnalysisValue(a.testKey, a.value);
       card.innerHTML =
         '<div class="analysis-icon">' +
           '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' +
@@ -2869,7 +3010,10 @@ function clearSession(){
         '<div class="analysis-info">' +
           '<h4>' + escapeHtml(a.type) + '</h4>' +
           '<div class="a-meta">' + escapeHtml(a.doctorName) + ' · ' + dateStr + '</div>' +
+          (a.value !== null && a.value !== undefined ? '<div class="a-meta">Vlera: <strong>' + a.value + '</strong></div>' : '') +
+          (evaluation ? evaluationBadgeHtml(evaluation) + '<div class="eval-disclaimer">Kontroll automatik, jo diagnozë — pyet mjekun për interpretim.</div>' : '') +
           (a.notes ? '<div class="a-notes">' + escapeHtml(a.notes) + '</div>' : '') +
+          (a.imageUrl ? '<img class="analysis-photo" src="' + a.imageUrl + '" alt="Fotografia e analizës" onclick="openPhotoLightbox(\'' + a.imageUrl.replace(/'/g,"\\'") + '\')" />' : '') +
         '</div>' +
         '<div class="analysis-date">' + new Date(a.addedAt).toLocaleDateString('sq-AL') + '</div>';
       list.appendChild(card);
@@ -2888,6 +3032,7 @@ function clearSession(){
     list.innerHTML = '';
     all.forEach(function(a){
       var card = el('div','analysis-card');
+      var evaluation = evaluateAnalysisValue(a.testKey, a.value);
       card.innerHTML =
         '<div class="analysis-icon">' +
           '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
@@ -2895,8 +3040,11 @@ function clearSession(){
         '<div class="analysis-info">' +
           '<h4>' + escapeHtml(a.type) + '</h4>' +
           '<div class="a-meta">Pacienti: <strong>' + escapeHtml(a.patientName) + '</strong> · ' + escapeHtml(a.doctorName) + ' · ' + (a.date||'—') + '</div>' +
+          (a.value !== null && a.value !== undefined ? '<div class="a-meta">Vlera: <strong>' + a.value + '</strong></div>' : '') +
+          (evaluation ? evaluationBadgeHtml(evaluation) : '') +
           (a.notes ? '<div class="a-notes">' + escapeHtml(a.notes) + '</div>' : '') +
-          '<button class="analysis-remove" data-id="' + a.id + '">Fshi analizën</button>' +
+          (a.imageUrl ? '<img class="analysis-photo" src="' + a.imageUrl + '" alt="Fotografia e analizës" onclick="openPhotoLightbox(\'' + a.imageUrl.replace(/'/g,"\\'") + '\')" />' : '') +
+          '<button class="analysis-remove" data-id="' + a.id + '" data-img-path="' + (a.imagePath ? escapeHtml(a.imagePath) : '') + '">Fshi analizën</button>' +
         '</div>' +
         '<div class="analysis-date">' + new Date(a.addedAt).toLocaleDateString('sq-AL') + '</div>';
       list.appendChild(card);
@@ -2904,10 +3052,12 @@ function clearSession(){
     list.querySelectorAll('.analysis-remove').forEach(function(btn){
       btn.onclick = async function(){
         var id = btn.getAttribute('data-id');
+        var imgPath = btn.getAttribute('data-img-path');
         try{
           await transactionalUpdate('analyses', function(all){
             return all.filter(function(a){ return a.id !== id; });
           });
+          if(imgPath) deleteAnalysisPhoto(imgPath);
         }catch(err){
           alert('Fshirja dështoi, provo prapë.');
           console.error(err);
@@ -2933,6 +3083,7 @@ function clearSession(){
     if(btn){ btn.disabled = true; btn.textContent = 'Duke kontrolluar…'; }
 
     try{
+      await authReady;
       var analysesSnap = await getDocFromServer(doc(firestore, COLLECTION_NAME, 'analyses'));
       var patientsSnap = await getDocFromServer(doc(firestore, COLLECTION_NAME, 'patients'));
       var analyses = analysesSnap.exists() ? JSON.parse(analysesSnap.data().value) : [];
@@ -2992,6 +3143,45 @@ function clearSession(){
     });
   }
 
+  function populateTestKeySelect(){
+    var sel = document.getElementById('anTestKey');
+    if(!sel) return;
+    Object.keys(REFERENCE_RANGES).forEach(function(key){
+      var ref = REFERENCE_RANGES[key];
+      var opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = ref.label + ' (' + ref.unit + ')';
+      sel.appendChild(opt);
+    });
+  }
+
+  function setupAnalysisPhotoInput(){
+    var fileInput = document.getElementById('anPhoto');
+    var wrap = document.getElementById('anPhotoPreviewWrap');
+    var img = document.getElementById('anPhotoPreview');
+    var removeBtn = document.getElementById('anPhotoRemoveBtn');
+    if(!fileInput) return;
+    fileInput.onchange = function(){
+      var file = fileInput.files && fileInput.files[0];
+      if(!file) return;
+      if(file.size > 8 * 1024 * 1024){
+        alert('Fotografia është shumë e madhe (maksimumi 8MB). Provo një tjetër.');
+        fileInput.value = '';
+        return;
+      }
+      pendingAnalysisPhotoFile = file;
+      var reader = new FileReader();
+      reader.onload = function(e){
+        img.src = e.target.result;
+        wrap.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    };
+    if(removeBtn){
+      removeBtn.onclick = function(){ clearAnalysisPhotoSelection(); };
+    }
+  }
+
   async function lookupPatientByCode(code){
     var patients = await getPatients();
     return patients.find(function(p){ return p.code === code; }) || null;
@@ -3013,6 +3203,8 @@ function clearSession(){
     };
   }
 
+  var pendingAnalysisPhotoFile = null;
+
   async function handleAddAnalysis(){
     var codeInput = document.getElementById('anPatientCode');
     var code = codeInput ? codeInput.value.trim() : '';
@@ -3020,6 +3212,9 @@ function clearSession(){
     var docId = document.getElementById('anDoctor').value;
     var date = document.getElementById('anDate').value;
     var notes = document.getElementById('anNotes').value.trim();
+    var testKey = document.getElementById('anTestKey').value;
+    var valueRaw = document.getElementById('anValue').value;
+    var value = valueRaw !== '' && !isNaN(parseFloat(valueRaw)) ? parseFloat(valueRaw) : null;
     var successEl = document.getElementById('analysisSuccess');
     var preview = document.getElementById('anPatientPreview');
 
@@ -3044,7 +3239,14 @@ function clearSession(){
     var submitBtn = document.getElementById('addAnalysisBtn');
     if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Duke dërguar…'; }
 
+    var photoInfo = null;
     try{
+      if(pendingAnalysisPhotoFile){
+        if(submitBtn) submitBtn.textContent = 'Duke ngarkuar fotografinë…';
+        photoInfo = await uploadAnalysisPhoto(pendingAnalysisPhotoFile, newId);
+      }
+
+      if(submitBtn) submitBtn.textContent = 'Duke ruajtur…';
       // Shkrim atomik: lexo listën e freskët dhe shto brenda një
       // transaksioni, që dy shtimе njëkohësisht (p.sh. dy mjekë që shtojnë
       // analiza në të njëjtën sekondë) të mos e fshijnë njëri-tjetrin.
@@ -3057,6 +3259,10 @@ function clearSession(){
           doctorName: doc ? doc.name : '—',
           date: date,
           notes: notes,
+          testKey: testKey || null,
+          value: value,
+          imageUrl: photoInfo ? photoInfo.url : null,
+          imagePath: photoInfo ? photoInfo.path : null,
           addedAt: new Date().toISOString()
         });
         return all;
@@ -3074,6 +3280,7 @@ function clearSession(){
       if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Shto analizën'; }
       successEl.textContent = '';
       successEl.classList.remove('show');
+      if(photoInfo) deleteAnalysisPhoto(photoInfo.path); // mos lëre foto "jetime" në Storage
       alert(err.message === 'VERIFY_FAILED'
         ? 'Analiza u dërgua, por verifikimi dështoi — rifresko faqen dhe kontrollo nëse u ruajt. Provo ta shtosh prapë nëse mungon.'
         : 'Dërgimi i analizës dështoi, provo prapë.');
@@ -3087,10 +3294,23 @@ function clearSession(){
     document.getElementById('anType').value = '';
     document.getElementById('anNotes').value = '';
     document.getElementById('anDate').value = '';
+    document.getElementById('anTestKey').value = '';
+    document.getElementById('anValue').value = '';
+    clearAnalysisPhotoSelection();
     successEl.textContent = '✓ Analiza u dërgua dhe u verifikua te ' + patient.name + ' (kodi ' + patient.code + ').';
     successEl.classList.add('show');
     setTimeout(function(){ successEl.classList.remove('show'); }, 3500);
     renderAllAnalyses();
+  }
+
+  function clearAnalysisPhotoSelection(){
+    pendingAnalysisPhotoFile = null;
+    var fileInput = document.getElementById('anPhoto');
+    if(fileInput) fileInput.value = '';
+    var wrap = document.getElementById('anPhotoPreviewWrap');
+    if(wrap) wrap.style.display = 'none';
+    var img = document.getElementById('anPhotoPreview');
+    if(img) img.src = '';
   }
 
   /* ---------------- Faturat (Invoices) ---------------- */
@@ -3400,6 +3620,15 @@ function clearSession(){
   document.getElementById('addInvoiceBtn').onclick = handleAddInvoice;
   document.getElementById('checkAnalysesBtn').onclick = runAnalysesHealthCheck;
 
+  document.getElementById('photoLightbox').onclick = function(){
+    this.classList.remove('open');
+    document.getElementById('photoLightboxImg').src = '';
+  };
+  window.openPhotoLightbox = function(url){
+    document.getElementById('photoLightboxImg').src = url;
+    document.getElementById('photoLightbox').classList.add('open');
+  };
+
   var searchDebounceTimer = null;
   document.getElementById('doctorSearchInput').oninput = function(e){
     var val = e.target.value;
@@ -3411,6 +3640,8 @@ function clearSession(){
   };
 
   initPatientNav();
+  populateTestKeySelect();
+  setupAnalysisPhotoInput();
 
   setAuthMode('patient');
 
