@@ -1797,12 +1797,23 @@ var db = {
    Error për të anuluar shkrimin (p.sh. kod pacienti i zënë).
    Kthen listën e re pas suksesit.
 --------------------------------------------------------------- */
+function safeParseList(rawValue){
+  if(typeof rawValue !== 'string' || rawValue.trim() === ''){ return []; }
+  try{
+    var parsed = JSON.parse(rawValue);
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(e){
+    console.warn('safeParseList: vlerë e dëmtuar, po vazhdoj me listë bosh.', e);
+    return [];
+  }
+}
+
 async function transactionalUpdate(key, updater){
   await authReady;
   var docRef = doc(firestore, COLLECTION_NAME, key);
   return await runTransaction(firestore, async function(tx){
     var snap = await tx.get(docRef);
-    var current = snap.exists() ? JSON.parse(snap.data().value) : [];
+    var current = snap.exists() ? safeParseList(snap.data().value) : [];
     var result = updater(current);
     tx.set(docRef, { value: JSON.stringify(result) });
     return result;
@@ -1823,7 +1834,7 @@ async function verifyWrite(key, predicate){
     // ka Firestore-i, jo çfarë mban mend shfletuesi.
     var snap = await getDocFromServer(doc(firestore, COLLECTION_NAME, key));
     if(!snap.exists()) return false;
-    var list = JSON.parse(snap.data().value);
+    var list = safeParseList(snap.data().value);
     return predicate(list);
   }catch(e){
     console.error('verifyWrite gabim:', e);
@@ -2550,7 +2561,7 @@ function clearSession(){
     try{
       await runTransaction(firestore, async function(tx){
         var snap = await tx.get(docRef);
-        var appts = snap.exists() ? JSON.parse(snap.data().value) : [];
+        var appts = snap.exists() ? safeParseList(snap.data().value) : [];
 
         // Re-check INSIDE the transaction against fresh data, not the
         // copy that was rendered on screen a moment ago. This closes the
@@ -2762,7 +2773,7 @@ function clearSession(){
     try{
       await runTransaction(firestore, async function(tx){
         var snap = await tx.get(docRef);
-        var list = snap.exists() ? JSON.parse(snap.data().value) : [];
+        var list = snap.exists() ? safeParseList(snap.data().value) : [];
 
         // Re-check INSIDE the transaction against fresh data, closing the
         // window where two staff could both add the same doctor at once.
@@ -3086,8 +3097,8 @@ function clearSession(){
       await authReady;
       var analysesSnap = await getDocFromServer(doc(firestore, COLLECTION_NAME, 'analyses'));
       var patientsSnap = await getDocFromServer(doc(firestore, COLLECTION_NAME, 'patients'));
-      var analyses = analysesSnap.exists() ? JSON.parse(analysesSnap.data().value) : [];
-      var patients = patientsSnap.exists() ? JSON.parse(patientsSnap.data().value) : [];
+      var analyses = analysesSnap.exists() ? safeParseList(analysesSnap.data().value) : [];
+      var patients = patientsSnap.exists() ? safeParseList(patientsSnap.data().value) : [];
 
       var byCode = {};
       patients.forEach(function(p){ if(p.code) byCode[p.code] = p; });
